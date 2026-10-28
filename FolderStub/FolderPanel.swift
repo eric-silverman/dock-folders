@@ -11,6 +11,7 @@ final class FolderPanel: NSPanel {
     static let maxListHeight: CGFloat = 480     // taller lists scroll
     static let rise: CGFloat = 12              // open animation: distance the popup slides out of the Dock
     static let openDuration: TimeInterval = 0.12
+    static let headerHeight: CGFloat = 28      // "Open … with" title when files were dropped on the folder
 
     private var scrollObserver: Any?
 
@@ -24,7 +25,18 @@ final class FolderPanel: NSPanel {
         Set(bundleURLs.compactMap { $0.map(canonicalPath) })
     }
 
-    init(apps: [URL], layout: FolderLayout = .grid, onPick: @escaping (URL) -> Void) {
+    /// Apps that can open every one of the files, given each file's handler list from Launch Services.
+    static func appsAbleToOpenAll(_ handlersPerFile: [[URL]]) -> Set<String> {
+        guard let first = handlersPerFile.first else { return [] }
+        return handlersPerFile.dropFirst().reduce(Set(first.map(canonicalPath))) { $0.intersection($1.map(canonicalPath)) }
+    }
+
+    static func header(for files: [URL]) -> String {
+        files.count == 1 ? "Open “\(FileManager.default.displayName(atPath: files[0].path))” with…"
+                         : "Open \(files.count) items with…"
+    }
+
+    init(apps: [URL], layout: FolderLayout = .grid, files: [URL] = [], onPick: @escaping (URL) -> Void) {
         let n = max(apps.count, 1)
         let cols = min(Self.maxColumns, Int(Double(n).squareRoot().rounded(.up)))
         let rows = (n + cols - 1) / cols
@@ -32,12 +44,18 @@ final class FolderPanel: NSPanel {
         // Regular apps only (what the Dock shows); skips ~100 helpers and agents on the open path.
         let running = Self.runningAppPaths(NSWorkspace.shared.runningApplications
             .filter { $0.activationPolicy == .regular }.map(\.bundleURL))
+        // Dropped files: dim apps Launch Services says can't open them (still clickable; declarations are
+        // incomplete for some apps).
+        let canOpen: Set<String>? = files.isEmpty ? nil
+            : Self.appsAbleToOpenAll(files.map { NSWorkspace.shared.urlsForApplications(toOpen: $0) })
+        let header: CGFloat = files.isEmpty ? 0 : Self.headerHeight
         let listHeight = CGFloat(apps.count) * Self.row.height
-        let size = list
+        var size = list
             ? NSSize(width: Self.row.width + 2 * Self.listPadding,
                      height: min(listHeight, Self.maxListHeight) + 2 * Self.listPadding)
             : NSSize(width: CGFloat(cols) * Self.cell.width + 2 * Self.padding,
                      height: CGFloat(rows) * Self.cell.height + 2 * Self.padding)
+        size.height += header
 
         // Non-activating: macOS won't let a Dock-launched UI-element app take focus, and a regular panel
         // hides while its app is inactive. This one shows anyway and can still be key (for Escape).
@@ -68,8 +86,19 @@ final class FolderPanel: NSPanel {
                                          y: (size.height - label.frame.height) / 2))
             effect.addSubview(label)
         }
+        if !files.isEmpty {
+            let title = NSTextField(labelWithString: Self.header(for: files))
+            title.font = .systemFont(ofSize: 12, weight: .semibold)
+            title.textColor = .secondaryLabelColor
+            title.lineBreakMode = .byTruncatingMiddle
+            title.frame = NSRect(x: 12, y: size.height - header + 2, width: size.width - 24, height: header - 10)
+            effect.addSubview(title)
+        }
+        func dimmed(_ url: URL) -> Bool { canOpen.map { !$0.contains(Self.canonicalPath(url)) } ?? false }
         if list {
-            let scroll = NSScrollView(frame: effect.bounds.insetBy(dx: Self.listPadding, dy: Self.listPadding))
+            let scroll = NSScrollView(frame: NSRect(x: Self.listPadding, y: Self.listPadding,
+                                                    width: size.width - 2 * Self.listPadding,
+                                                    height: size.height - header - 2 * Self.listPadding))
             scroll.drawsBackground = false
             scroll.hasVerticalScroller = listHeight > Self.maxListHeight
             // Rows fit beside a legacy ("Show scroll bars: Always") scroller instead of under it.
@@ -78,7 +107,8 @@ final class FolderPanel: NSPanel {
             for (i, url) in apps.enumerated() {
                 let frame = NSRect(x: 0, y: CGFloat(i) * Self.row.height, width: width, height: Self.row.height)
                 listView.addSubview(AppItemView(url: url, frame: frame, style: .row,
-                                                running: running.contains(Self.canonicalPath(url)), onPick: onPick))
+                                                running: running.contains(Self.canonicalPath(url)),
+                                                dimmed: dimmed(url), onPick: onPick))
             }
             scroll.documentView = listView
             effect.addSubview(scroll)
@@ -97,7 +127,8 @@ final class FolderPanel: NSPanel {
             let origin = NSPoint(x: Self.padding + CGFloat(col) * Self.cell.width,
                                  y: Self.padding + CGFloat(rows - 1 - row) * Self.cell.height)
             effect.addSubview(AppItemView(url: url, frame: NSRect(origin: origin, size: Self.cell), style: .tile,
-                                          running: running.contains(Self.canonicalPath(url)), onPick: onPick))
+                                          running: running.contains(Self.canonicalPath(url)),
+                                          dimmed: dimmed(url), onPick: onPick))
         }
     }
 
@@ -146,7 +177,7 @@ private final class AppItemView: NSView {
     private let available: Bool
     private let onPick: (URL) -> Void
 
-    init(url: URL, frame: NSRect, style: Style, running: Bool, onPick: @escaping (URL) -> Void) {
+    init(url: URL, frame: NSRect, style: Style, running: Bool, dimmed: Bool = false, onPick: @escaping (URL) -> Void) {
         self.url = url
         self.onPick = onPick
         available = FileManager.default.fileExists(atPath: url.path)
@@ -196,6 +227,10 @@ private final class AppItemView: NSView {
         setAccessibilityRole(.button)
         setAccessibilityLabel(running ? "\(name), running" : name)
 
+        if available && dimmed {
+            alphaValue = 0.45
+            toolTip = "\(name) may not open this"
+        }
         if !available {
             alphaValue = 0.35
             toolTip = "Not found: \(url.path)"

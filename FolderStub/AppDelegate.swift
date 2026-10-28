@@ -13,6 +13,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var panel: FolderPanel?
     private var clickMonitor: Any?
     private var activationObserver: Any?
+    /// Files dropped on the folder's Dock tile; picking an app opens them in it.
+    private var droppedFiles: [URL] = []
+    private var didLaunch = false
 
     static func main() {
         let app = NSApplication.shared
@@ -21,12 +24,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         withExtendedLifetime(delegate) { app.run() }
     }
 
+    func application(_ application: NSApplication, open urls: [URL]) {
+        droppedFiles = urls
+        if didLaunch { showPanel() } // dropped while the folder was already open: show it for these files
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let folder = Self.loadFolder()
-        let apps = (folder?.appPaths ?? []).map { URL(fileURLWithPath: $0) }
-        let panel = FolderPanel(apps: apps, layout: folder?.layout ?? .grid) { [weak self] url in self?.launch(url) }
-        panel.show(near: NSEvent.mouseLocation)
-        self.panel = panel
+        didLaunch = true
+        showPanel()
         // We never become the active app (macOS refuses focus to Dock-launched UI-element apps), so dismiss
         // on any click in another app, or when another app comes to the front (e.g. Cmd-Tab).
         clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { _ in
@@ -36,6 +41,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { _ in
             MainActor.assumeIsolated { NSApp.terminate(nil) }
         }
+    }
+
+    private func showPanel() {
+        panel?.orderOut(nil)
+        let folder = Self.loadFolder()
+        let apps = (folder?.appPaths ?? []).map { URL(fileURLWithPath: $0) }
+        let panel = FolderPanel(apps: apps, layout: folder?.layout ?? .grid, files: droppedFiles) { [weak self] url in
+            self?.launch(url)
+        }
+        panel.show(near: NSEvent.mouseLocation)
+        self.panel = panel
     }
 
     // Dock click while the grid is open toggles it closed, like a stack.
@@ -50,8 +66,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func launch(_ url: URL) {
         panel?.orderOut(nil)
+        let files = droppedFiles
         Task {
-            _ = try? await NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
+            let config = NSWorkspace.OpenConfiguration()
+            if files.isEmpty {
+                _ = try? await NSWorkspace.shared.openApplication(at: url, configuration: config)
+            } else {
+                _ = try? await NSWorkspace.shared.open(files, withApplicationAt: url, configuration: config)
+            }
             NSApp.terminate(nil)
         }
     }

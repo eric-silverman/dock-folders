@@ -25,6 +25,24 @@ struct FolderPanelTests {
         #expect(!running.contains(FolderPanel.canonicalPath(dir.appending(path: "Other.app"))))
     }
 
+    @Test func onlyAppsThatOpenEveryDroppedFileCount() {
+        let a = URL(fileURLWithPath: "/Applications/A.app"), b = URL(fileURLWithPath: "/Applications/B.app")
+        let c = URL(fileURLWithPath: "/Applications/C.app")
+        #expect(FolderPanel.appsAbleToOpenAll([]) == [])
+        #expect(FolderPanel.appsAbleToOpenAll([[a, b]]) == [a.path, b.path])
+        #expect(FolderPanel.appsAbleToOpenAll([[a, b], [b, c]]) == [b.path])
+        #expect(FolderPanel.appsAbleToOpenAll([[a], []]) == [])
+    }
+
+    @Test func droppedFilesAddAHeader() {
+        let apps = [URL(fileURLWithPath: "/Applications/A.app")]
+        let plain = FolderPanel(apps: apps) { _ in }
+        let withFiles = FolderPanel(apps: apps, files: [URL(fileURLWithPath: "/tmp/a.txt")]) { _ in }
+        #expect(withFiles.frame.height == plain.frame.height + FolderPanel.headerHeight)
+        #expect(FolderPanel.header(for: [URL(fileURLWithPath: "/tmp/a.txt"), URL(fileURLWithPath: "/tmp/b.txt")])
+                == "Open 2 items with…")
+    }
+
     @Test func emptyListFolderFallsBackToGridEmptyState() {
         let p = FolderPanel(apps: [], layout: .list) { _ in }
         #expect(p.frame.size == NSSize(width: FolderPanel.cell.width + 2 * FolderPanel.padding,

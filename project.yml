@@ -41,6 +41,13 @@ targets:
         LSUIElement: true
         CFBundleName: Folder
         DockFolderID: ""
+        # Lets the Dock accept files dropped on a folder tile. Rank None keeps folder apps out of
+        # Finder's Open With menus and never makes them a default handler.
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Any File
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: None
+            LSItemContentTypes: [public.item]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.esilverman.DockFolders.FolderStub
