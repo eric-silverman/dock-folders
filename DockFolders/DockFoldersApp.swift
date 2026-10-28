@@ -11,6 +11,8 @@ struct DockFoldersApp: App {
                 .environment(model)
                 .frame(minWidth: 640, minHeight: 420)
         }
+        // Launched by a folder app just to rebuild it: stay in the menu bar, no window.
+        .defaultLaunchBehavior(CommandLine.arguments.contains(StubInfo.backgroundArgument) ? .suppressed : .automatic)
         MenuBarExtra("DockFolders", systemImage: "square.grid.3x3.square") {
             MenuContent().environment(model)
         }

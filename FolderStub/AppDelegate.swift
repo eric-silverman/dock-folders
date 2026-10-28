@@ -3,10 +3,13 @@ import AppKit
 @main
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    static var folderID: UUID? {
+        (Bundle.main.object(forInfoDictionaryKey: StubInfo.folderIDKey) as? String).flatMap(UUID.init(uuidString:))
+    }
+
     /// This folder: DockFolderID from our Info.plist, contents from folders.json.
     static func loadFolder() -> Folder? {
-        guard let idString = Bundle.main.object(forInfoDictionaryKey: StubInfo.folderIDKey) as? String,
-              let id = UUID(uuidString: idString) else { return nil }
+        guard let id = folderID else { return nil }
         return (try? FolderStore.load())?.first { $0.id == id }
     }
 
@@ -15,6 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var activationObserver: Any?
     /// Files dropped on the folder's Dock tile; picking an app opens them in it.
     private var droppedFiles: [URL] = []
+    private var notice: String?
     private var didLaunch = false
 
     static func main() {
@@ -25,8 +29,44 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
-        droppedFiles = urls
-        if didLaunch { showPanel() } // dropped while the folder was already open: show it for these files
+        // Only apps dropped: add them to the folder. Anything else (or a mix): pick an app to open it with.
+        let apps = urls.filter { $0.pathExtension == "app" }
+        if apps.count == urls.count, let added = addToFolder(apps) {
+            droppedFiles = []
+            notice = switch added.count {
+            case 0: "Already in this folder"
+            case 1: "Added “\(FileManager.default.displayName(atPath: added[0]))”"
+            default: "Added \(added.count) apps"
+            }
+        } else {
+            droppedFiles = urls
+            notice = nil
+        }
+        if didLaunch { showPanel() } // dropped while the folder was already open: show it again
+    }
+
+    /// Adds the apps to this folder in folders.json; nil if the folder can't be found or saved.
+    private func addToFolder(_ apps: [URL]) -> [String]? {
+        guard let id = Self.folderID else { return nil }
+        var added: [String] = []
+        guard (try? FolderStore.update(id) { added = $0.addApps(apps) }) == true else { return nil }
+        if !added.isEmpty { Self.requestRebuild(id) }
+        return added
+    }
+
+    /// The manager owns icon rendering: ask it to rebuild this folder app (and refresh the Dock).
+    private static func requestRebuild(_ id: UUID) {
+        guard let managerID = StubInfo.managerBundleID(fromStubID: Bundle.main.bundleIdentifier ?? "") else { return }
+        if !NSRunningApplication.runningApplications(withBundleIdentifier: managerID).isEmpty {
+            DistributedNotificationCenter.default().postNotificationName(
+                .init(StubInfo.folderChangedNotification(managerBundleID: managerID)),
+                object: id.uuidString, userInfo: nil, deliverImmediately: true)
+        } else if let manager = NSWorkspace.shared.urlForApplication(withBundleIdentifier: managerID) {
+            let config = NSWorkspace.OpenConfiguration()
+            config.activates = false
+            config.arguments = [StubInfo.backgroundArgument, StubInfo.rebuildArgument, id.uuidString]
+            NSWorkspace.shared.openApplication(at: manager, configuration: config)
+        }
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -50,7 +90,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panel?.orderOut(nil)
         let folder = Self.loadFolder()
         let apps = (folder?.appPaths ?? []).map { URL(fileURLWithPath: $0) }
-        let panel = FolderPanel(apps: apps, layout: folder?.layout ?? .grid, files: droppedFiles) { [weak self] url in
+        let panel = FolderPanel(apps: apps, layout: folder?.layout ?? .grid, files: droppedFiles,
+                                notice: notice) { [weak self] url in
             self?.launch(url)
         }
         panel.show(near: NSEvent.mouseLocation)
