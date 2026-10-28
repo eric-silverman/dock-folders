@@ -105,7 +105,7 @@ struct DockPrefsEdgeTests {
     @Test func updateRefusesWhenDockUnreadable() {
         var wrote = false
         #expect(throws: DockPrefs.Unavailable.self) {
-            try DockPrefs.update(read: { nil }, write: { _ in wrote = true; return true },
+            try DockPrefs.update(.apps, read: { nil }, write: { _ in wrote = true; return true },
                                  backupDirectory: tempDir()) { $0 + [[:]] }
         }
         #expect(!wrote)
@@ -118,11 +118,11 @@ struct DockPrefsEdgeTests {
         let read = { Optional(dock) }
         let write = { (t: [DockPrefs.Tile]) -> Bool in dock = t; return true }
 
-        #expect(try DockPrefs.update(read: read, write: write, backupDirectory: dir) { $0 } == false)
+        #expect(try DockPrefs.update(.apps, read: read, write: write, backupDirectory: dir) { $0 } == false)
         #expect(!FileManager.default.fileExists(atPath: dir.path))
 
-        try DockPrefs.update(read: read, write: write, backupDirectory: dir) { DockPrefs.adding(stub, label: "Dev", to: $0) }
-        try DockPrefs.update(read: read, write: write, backupDirectory: dir) { DockPrefs.removing(stub, from: $0) }
+        try DockPrefs.update(.apps, read: read, write: write, backupDirectory: dir) { DockPrefs.adding(stub, label: "Dev", to: $0) }
+        try DockPrefs.update(.apps, read: read, write: write, backupDirectory: dir) { DockPrefs.removing(stub, from: $0) }
         let original = try PropertyListSerialization.propertyList(
             from: Data(contentsOf: dir.appending(path: "persistent-apps-original.plist")), format: nil) as? [Any]
         let latest = try PropertyListSerialization.propertyList(
@@ -131,9 +131,21 @@ struct DockPrefsEdgeTests {
         #expect(latest?.count == 2)   // state just before the last write
     }
 
+    @Test func eachListKeepsItsOwnBackups() throws {
+        let dir = tempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        var right: [DockPrefs.Tile] = []
+        try DockPrefs.update(.others, read: { right }, write: { right = $0; return true }, backupDirectory: dir) {
+            DockPrefs.adding(stub, label: "Dev", to: $0)
+        }
+        #expect(right.compactMap(DockPrefs.path(of:)) == [stub.path])
+        #expect(FileManager.default.fileExists(atPath: dir.appending(path: "persistent-others-original.plist").path))
+        #expect(!FileManager.default.fileExists(atPath: dir.appending(path: "persistent-apps-original.plist").path))
+    }
+
     @Test func updateThrowsWhenWriteFails() {
         #expect(throws: DockPrefs.WriteFailed.self) {
-            try DockPrefs.update(read: { [] }, write: { _ in false }, backupDirectory: tempDir()) { $0 + [[:]] }
+            try DockPrefs.update(.apps, read: { [] }, write: { _ in false }, backupDirectory: tempDir()) { $0 + [[:]] }
         }
     }
 

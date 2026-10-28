@@ -135,7 +135,7 @@ private struct FolderDetail: View {
             Button("Add and Restart Dock") { commitName(); model.addToDock(folder.id) }
             Button("Show in Finder Instead") { model.showInFinder(folder.id) }
         } message: {
-            Text("The Dock restarts for a moment. Or drag the app from Finder into the Dock yourself.")
+            Text("It goes on the right side of the Dock, next to Downloads, apart from your running apps. The Dock restarts for a moment.")
         }
         .confirmationDialog("Delete “\(folder.name)”?", isPresented: $confirmDelete) {
             Button("Delete", role: .destructive) { model.delete(folder.id) }

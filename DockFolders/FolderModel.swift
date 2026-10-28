@@ -53,7 +53,7 @@ final class FolderModel {
         folders[i].name = name
         if FileManager.default.fileExists(atPath: old.path) { try? FileManager.default.moveItem(at: old, to: new) }
         reloadDockState()
-        if dockPaths.contains(old.path), editDock({ DockPrefs.replacing(old, with: new, label: name, in: $0) }) {
+        if dockPaths.contains(old.path), editDockEverywhere({ DockPrefs.replacing(old, with: new, label: name, in: $0) }) {
             // The running Dock still holds the old path and would write it back, so restart it once the
             // renamed app is rebuilt (new name and icon in one restart).
             save()
@@ -109,7 +109,7 @@ final class FolderModel {
         save()
         try? FileManager.default.trashItem(at: stub, resultingItemURL: nil)
         reloadDockState()
-        if dockPaths.contains(stub.path), editDock({ DockPrefs.removing(stub, from: $0) }) {
+        if dockPaths.contains(stub.path), editDockEverywhere({ DockPrefs.removing(stub, from: $0) }) {
             refreshDock()
         }
     }
@@ -122,7 +122,7 @@ final class FolderModel {
             // Look the folder up again: it may have been renamed or deleted while building.
             guard await build.value, let folder = folder(id) else { return }
             let stub = StubGenerator.url(for: folder.name)
-            if editDock({ DockPrefs.adding(stub, label: folder.name, to: $0) }) { refreshDock() }
+            if editDock(.others, { DockPrefs.adding(stub, label: folder.name, to: $0) }) { refreshDock() }
         }
     }
 
@@ -152,9 +152,15 @@ final class FolderModel {
 
     /// Returns false if the edit failed (error shown) or changed nothing.
     @discardableResult
-    private func editDock(_ change: ([DockPrefs.Tile]) -> [DockPrefs.Tile]) -> Bool {
+    private func editDock(_ list: DockPrefs.List, _ change: ([DockPrefs.Tile]) -> [DockPrefs.Tile]) -> Bool {
         defer { reloadDockState() }
-        do { return try DockPrefs.update(change) } catch { errorMessage = error.localizedDescription; return false }
+        do { return try DockPrefs.update(list, change) } catch { errorMessage = error.localizedDescription; return false }
+    }
+
+    /// Applies `change` to both sides of the Dock: a folder may sit on either (left from older versions
+    /// or moved there by hand). Returns whether either side changed.
+    private func editDockEverywhere(_ change: ([DockPrefs.Tile]) -> [DockPrefs.Tile]) -> Bool {
+        DockPrefs.List.allCases.map { editDock($0, change) }.contains(true)
     }
 
     /// Saves now; rebuilds the folder's app once edits pause (icon render + codesign takes a moment).
