@@ -178,8 +178,8 @@ private struct ColorSwatches: View {
                         .overlay(Circle().strokeBorder(.primary, lineWidth: color == selection ? 2 : 0).padding(-3))
                 }
                 .buttonStyle(.plain)
-                .help(color.rawValue.capitalized)
-                .accessibilityLabel("\(color.rawValue.capitalized) icon")
+                .help(color.displayName)
+                .accessibilityLabel("\(color.displayName) icon")
                 .accessibilityAddTraits(color == selection ? .isSelected : [])
             }
         }

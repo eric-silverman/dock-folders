@@ -9,14 +9,15 @@ struct Folder: Codable, Identifiable, Equatable, Sendable {
 }
 
 extension Folder {
-    // Keys added after v1 are optional so older folders.json files still load.
+    // Display options are optional and lenient: a missing key (older file) or an unknown value (newer
+    // file, typo) falls back to the default instead of failing the whole folders.json load.
     init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(UUID.self, forKey: .id)
         name = try c.decode(String.self, forKey: .name)
         appPaths = try c.decode([String].self, forKey: .appPaths)
-        layout = try c.decodeIfPresent(FolderLayout.self, forKey: .layout) ?? .grid
-        color = try c.decodeIfPresent(FolderColor.self, forKey: .color) ?? .graphite
+        layout = (try? c.decodeIfPresent(FolderLayout.self, forKey: .layout)) ?? .grid
+        color = (try? c.decodeIfPresent(FolderColor.self, forKey: .color)) ?? .graphite
     }
 }
 
@@ -28,6 +29,8 @@ enum FolderLayout: String, Codable, CaseIterable, Sendable {
 /// Background of the folder's Dock icon.
 enum FolderColor: String, Codable, CaseIterable, Sendable {
     case graphite, blue, purple, pink, red, orange, yellow, green
+
+    var displayName: String { rawValue.capitalized }
 
     /// Base sRGB color; the icon renders it as a gradient (lighter top, darker bottom).
     var rgb: (red: Double, green: Double, blue: Double) {

@@ -12,6 +12,12 @@ struct FolderPanelTests {
         #expect(panel.canBecomeKey) // Escape still reaches it
     }
 
+    @Test func emptyListFolderFallsBackToGridEmptyState() {
+        let p = FolderPanel(apps: [], layout: .list) { _ in }
+        #expect(p.frame.size == NSSize(width: FolderPanel.cell.width + 2 * FolderPanel.padding,
+                                       height: FolderPanel.cell.height + 2 * FolderPanel.padding))
+    }
+
     @Test func listLayoutIsOneColumnAndCapsHeight() {
         let apps = (0..<3).map { URL(fileURLWithPath: "/Applications/App\($0).app") }
         let list = FolderPanel(apps: apps, layout: .list) { _ in }

@@ -41,10 +41,10 @@ App-list changes take effect the next time you open the folder. Changing a folde
 ## Known limitations
 
 - **Icon caching:** after you change a folder's apps, the Dock can keep showing the old icon or name until it restarts (**Refresh Dock**).
-- **Position:** the grid opens at the mouse pointer, above or beside the Dock, rather than lined up with the exact tile.
+- **Position:** the folder opens at the mouse pointer, above or beside the Dock, rather than lined up with the exact tile.
 - **Ad-hoc signing:** folder apps are signed locally and work on this Mac. Copying them to another Mac isn't supported.
 - **Running apps still get their own Dock icon:** macOS adds a Dock icon for every running app, and no public API lets another app hide it. The icon goes away when you quit the app (if "Show suggested and recent apps in Dock" is off).
-- **Auto-hidden Dock:** the grid guesses which edge the Dock is on from where the mouse is.
+- **Auto-hidden Dock:** the folder guesses which edge the Dock is on from where the mouse is.
 
 ## Layout
 

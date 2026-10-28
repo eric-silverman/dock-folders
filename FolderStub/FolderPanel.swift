@@ -9,8 +9,10 @@ final class FolderPanel: NSPanel {
     static let row = NSSize(width: 260, height: 30)
     static let listPadding: CGFloat = 6
     static let maxListHeight: CGFloat = 480     // taller lists scroll
-    static let rise: CGFloat = 12              // open animation: distance the grid slides out of the Dock
+    static let rise: CGFloat = 12              // open animation: distance the popup slides out of the Dock
     static let openDuration: TimeInterval = 0.12
+
+    private var scrollObserver: Any?
 
     init(apps: [URL], layout: FolderLayout = .grid, onPick: @escaping (URL) -> Void) {
         let n = max(apps.count, 1)
@@ -54,16 +56,26 @@ final class FolderPanel: NSPanel {
             effect.addSubview(label)
         }
         if list {
-            let rows = FlippedView(frame: NSRect(x: 0, y: 0, width: Self.row.width, height: listHeight))
-            for (i, url) in apps.enumerated() {
-                let frame = NSRect(origin: NSPoint(x: 0, y: CGFloat(i) * Self.row.height), size: Self.row)
-                rows.addSubview(AppItemView(url: url, frame: frame, style: .row, onPick: onPick))
-            }
             let scroll = NSScrollView(frame: effect.bounds.insetBy(dx: Self.listPadding, dy: Self.listPadding))
             scroll.drawsBackground = false
             scroll.hasVerticalScroller = listHeight > Self.maxListHeight
-            scroll.documentView = rows
+            // Rows fit beside a legacy ("Show scroll bars: Always") scroller instead of under it.
+            let width = scroll.contentSize.width
+            let listView = FlippedView(frame: NSRect(x: 0, y: 0, width: width, height: listHeight))
+            for (i, url) in apps.enumerated() {
+                let frame = NSRect(x: 0, y: CGFloat(i) * Self.row.height, width: width, height: Self.row.height)
+                listView.addSubview(AppItemView(url: url, frame: frame, style: .row, onPick: onPick))
+            }
+            scroll.documentView = listView
             effect.addSubview(scroll)
+            // Scrolling under a still pointer sends no enter/exit events, so re-check hover on scroll.
+            scroll.contentView.postsBoundsChangedNotifications = true
+            scrollObserver = NotificationCenter.default.addObserver(
+                forName: NSView.boundsDidChangeNotification, object: scroll.contentView, queue: .main) { _ in
+                MainActor.assumeIsolated {
+                    for case let item as AppItemView in listView.subviews { item.updateHover() }
+                }
+            }
             return
         }
         for (i, url) in apps.enumerated() {
@@ -80,7 +92,7 @@ final class FolderPanel: NSPanel {
         if event.keyCode == 53 { NSApp.terminate(nil) } else { super.keyDown(with: event) } // Escape
     }
 
-    /// Places the grid next to the Dock and animates it in: a short fade while sliding out of the Dock edge.
+    /// Places the popup next to the Dock and animates it in: a short fade while sliding out of the Dock edge.
     func show(near mouse: NSPoint) {
         guard let screen = NSScreen.screens.first(where: { NSMouseInRect(mouse, $0.frame, false) }) ?? NSScreen.main else {
             center()
@@ -145,11 +157,13 @@ private final class AppItemView: NSView {
             label.alignment = .center
             label.frame = NSRect(x: 4, y: 6, width: frame.width - 8, height: 16)
         case .row:
-            icon.frame = NSRect(x: 6, y: (frame.height - 24) / 2, width: 24, height: 24)
+            let inset: CGFloat = 6, iconSize: CGFloat = 24, gap: CGFloat = 8
+            icon.frame = NSRect(x: inset, y: (frame.height - iconSize) / 2, width: iconSize, height: iconSize)
             label.font = .systemFont(ofSize: 13)
             label.sizeToFit()
-            label.frame = NSRect(x: 38, y: (frame.height - label.frame.height) / 2,
-                                 width: frame.width - 46, height: label.frame.height)
+            let labelX = inset + iconSize + gap
+            label.frame = NSRect(x: labelX, y: (frame.height - label.frame.height) / 2,
+                                 width: frame.width - labelX - inset, height: label.frame.height)
         }
 
         if !available {
@@ -166,11 +180,17 @@ private final class AppItemView: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? { frame.contains(point) ? self : nil }
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
-    override func mouseEntered(with event: NSEvent) {
-        if available { layer?.backgroundColor = NSColor.labelColor.withAlphaComponent(0.12).cgColor }
+    override func mouseEntered(with event: NSEvent) { setHighlighted(true) }
+    override func mouseExited(with event: NSEvent) { setHighlighted(false) }
+
+    func updateHover() {
+        guard let window else { return }
+        setHighlighted(bounds.contains(convert(window.mouseLocationOutsideOfEventStream, from: nil)))
     }
 
-    override func mouseExited(with event: NSEvent) { layer?.backgroundColor = nil }
+    private func setHighlighted(_ on: Bool) {
+        layer?.backgroundColor = on && available ? NSColor.labelColor.withAlphaComponent(0.12).cgColor : nil
+    }
 
     override func mouseDown(with event: NSEvent) {}
 

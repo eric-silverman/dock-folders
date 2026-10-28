@@ -82,11 +82,10 @@ final class FolderModel {
         changed(id)
     }
 
-    /// Layout is read by the folder app each time it opens, so no rebuild is needed.
     func setLayout(_ layout: FolderLayout, for id: UUID) {
         guard let i = index(id), folders[i].layout != layout else { return }
         folders[i].layout = layout
-        save()
+        changed(id) // rebuild: folder apps made by an older DockFolders don't know about layouts
     }
 
     func setColor(_ color: FolderColor, for id: UUID) {
