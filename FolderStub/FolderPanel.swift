@@ -29,7 +29,9 @@ final class FolderPanel: NSPanel {
         let cols = min(Self.maxColumns, Int(Double(n).squareRoot().rounded(.up)))
         let rows = (n + cols - 1) / cols
         let list = layout == .list && !apps.isEmpty
-        let running = Self.runningAppPaths(NSWorkspace.shared.runningApplications.map(\.bundleURL))
+        // Regular apps only (what the Dock shows); skips ~100 helpers and agents on the open path.
+        let running = Self.runningAppPaths(NSWorkspace.shared.runningApplications
+            .filter { $0.activationPolicy == .regular }.map(\.bundleURL))
         let listHeight = CGFloat(apps.count) * Self.row.height
         let size = list
             ? NSSize(width: Self.row.width + 2 * Self.listPadding,
@@ -183,14 +185,16 @@ private final class AppItemView: NSView {
         if running {
             let size: CGFloat = 4
             let dot = NSView(frame: style == .tile
-                ? NSRect(x: (frame.width - size) / 2, y: icon.frame.minY - size - 0.5, width: size, height: size)
+                ? NSRect(x: (frame.width - size) / 2, y: icon.frame.minY - size, width: size, height: size)
                 : NSRect(x: 1, y: (frame.height - size) / 2, width: size, height: size))
             dot.wantsLayer = true
             dot.layer?.backgroundColor = NSColor.labelColor.withAlphaComponent(0.7).cgColor
             dot.layer?.cornerRadius = size / 2
-            dot.setAccessibilityLabel("Running")
             addSubview(dot)
         }
+        setAccessibilityElement(true)
+        setAccessibilityRole(.button)
+        setAccessibilityLabel(running ? "\(name), running" : name)
 
         if !available {
             alphaValue = 0.35
