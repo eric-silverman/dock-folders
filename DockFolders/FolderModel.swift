@@ -14,7 +14,9 @@ final class FolderModel {
     static let rebuildDelay: Duration = .milliseconds(400)
     /// Latest build per folder. Each build waits for the previous one, so two never write the same app at once.
     @ObservationIgnored private var builds: [UUID: Task<Bool, Never>] = [:]
-    @ObservationIgnored private var folderChangedObserver: Any?
+    @ObservationIgnored private var requestObservers: [Any] = []
+    /// Bumped to ask the UI to open the window (the model can't call SwiftUI's openWindow itself).
+    var windowRequests = 0
 
     init() {
         do {
@@ -29,18 +31,27 @@ final class FolderModel {
         selection = folders.first?.id
         dockPaths = DockPrefs.paths()
 
-        // Folder apps tell us when apps were dropped onto them (see StubInfo), or launch us to rebuild.
+        // Folder apps and their Dock menus send requests (see ManagerRequest): by notification while we
+        // run, or as launch arguments.
         let managerID = Bundle.main.bundleIdentifier ?? ""
-        folderChangedObserver = DistributedNotificationCenter.default().addObserver(
-            forName: .init(StubInfo.folderChangedNotification(managerBundleID: managerID)), object: nil, queue: .main
-        ) { [weak self] note in
-            let id = (note.object as? String).flatMap(UUID.init(uuidString:))
-            MainActor.assumeIsolated { if let id { self?.folderChangedOnDisk(id) } }
+        for request in ManagerRequest.allCases {
+            requestObservers.append(DistributedNotificationCenter.default().addObserver(
+                forName: request.notificationName(managerBundleID: managerID), object: nil, queue: .main
+            ) { [weak self] note in
+                let id = (note.object as? String).flatMap(UUID.init(uuidString:))
+                MainActor.assumeIsolated { if let id { self?.handle(request, for: id) } }
+            })
+            if let id = request.folderID(in: CommandLine.arguments) { handle(request, for: id) }
         }
-        let args = CommandLine.arguments
-        if let i = args.firstIndex(of: StubInfo.rebuildArgument), i + 1 < args.count,
-           let id = UUID(uuidString: args[i + 1]) {
-            folderChangedOnDisk(id)
+    }
+
+    private func handle(_ request: ManagerRequest, for id: UUID) {
+        switch request {
+        case .rebuild: folderChangedOnDisk(id)
+        case .edit:
+            if folder(id) == nil, let fresh = try? FolderStore.load() { folders = fresh }
+            selection = id
+            windowRequests += 1
         }
     }
 

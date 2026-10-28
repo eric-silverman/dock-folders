@@ -50,23 +50,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let id = Self.folderID else { return nil }
         var added: [String] = []
         guard (try? FolderStore.update(id) { added = $0.addApps(apps) }) == true else { return nil }
-        if !added.isEmpty { Self.requestRebuild(id) }
+        // The manager owns icon rendering: ask it to rebuild this folder app (and refresh the Dock).
+        if !added.isEmpty { ManagerRequest.rebuild.send(folderID: id, folderAppBundleID: Bundle.main.bundleIdentifier ?? "") }
         return added
-    }
-
-    /// The manager owns icon rendering: ask it to rebuild this folder app (and refresh the Dock).
-    private static func requestRebuild(_ id: UUID) {
-        guard let managerID = StubInfo.managerBundleID(fromStubID: Bundle.main.bundleIdentifier ?? "") else { return }
-        if !NSRunningApplication.runningApplications(withBundleIdentifier: managerID).isEmpty {
-            DistributedNotificationCenter.default().postNotificationName(
-                .init(StubInfo.folderChangedNotification(managerBundleID: managerID)),
-                object: id.uuidString, userInfo: nil, deliverImmediately: true)
-        } else if let manager = NSWorkspace.shared.urlForApplication(withBundleIdentifier: managerID) {
-            let config = NSWorkspace.OpenConfiguration()
-            config.activates = false
-            config.arguments = [StubInfo.backgroundArgument, StubInfo.rebuildArgument, id.uuidString]
-            NSWorkspace.shared.openApplication(at: manager, configuration: config)
-        }
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {

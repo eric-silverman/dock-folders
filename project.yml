@@ -35,12 +35,20 @@ targets:
     type: application
     platform: macOS
     sources: [FolderStub, Shared]
+    dependencies:
+      # Gives each folder's Dock tile an "Edit Folder…" menu item while the folder app isn't running.
+      - target: FolderDockMenu
+        embed: true
+        codeSign: false
+        copy:
+          destination: plugins
     info:
       path: FolderStub/Info.plist
       properties:
         LSUIElement: true
         CFBundleName: Folder
         DockFolderID: ""
+        NSDockTilePlugIn: FolderDockMenu.docktileplugin
         # Lets the Dock accept files dropped on a folder tile. Rank None keeps folder apps out of
         # Finder's Open With menus and never makes them a default handler.
         CFBundleDocumentTypes:
@@ -51,6 +59,19 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.esilverman.DockFolders.FolderStub
+  FolderDockMenu:
+    type: bundle
+    platform: macOS
+    sources: [FolderDockMenu, Shared/Folder.swift, Shared/ManagerRequest.swift]
+    info:
+      path: FolderDockMenu/Info.plist
+      properties:
+        CFBundleExecutable: $(EXECUTABLE_NAME)
+        NSPrincipalClass: DockMenuPlugIn
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.esilverman.DockFolders.DockMenu
+        WRAPPER_EXTENSION: docktileplugin
   DockFoldersTests:
     type: bundle.unit-test
     platform: macOS

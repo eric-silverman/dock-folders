@@ -60,6 +60,15 @@ struct DroppedAppsTests {
         #expect(try FolderStore.update(UUID(), at: url) { _ in } == false)
     }
 
+    @Test func requestArgumentsRoundTrip() {
+        let id = UUID()
+        let args = ["DockFolders", StubInfo.backgroundArgument, ManagerRequest.rebuild.argument, id.uuidString]
+        #expect(ManagerRequest.rebuild.folderID(in: args) == id)
+        #expect(ManagerRequest.edit.folderID(in: args) == nil)
+        #expect(ManagerRequest.edit.folderID(in: ["DockFolders", "--edit"]) == nil)
+        #expect(ManagerRequest.edit.notificationName(managerBundleID: "m").rawValue == "m.edit")
+    }
+
     @Test func managerIDFromFolderAppID() {
         #expect(StubInfo.managerBundleID(fromStubID: "com.esilverman.DockFolders.folder.11111111-2222-3333-4444-555555555555")
                 == "com.esilverman.DockFolders")

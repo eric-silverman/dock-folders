@@ -94,12 +94,7 @@ enum StubInfo {
     static let folderIDKey = "DockFolderID"
     static let iconName = "FolderIcon"
 
-    // A folder app that changed folders.json (apps dropped on its tile) asks the manager to rebuild it: by
-    // distributed notification if the manager is running, else by launching it with these arguments.
-    static let backgroundArgument = "--background" // launch without opening the window
-    static let rebuildArgument = "--rebuild"       // followed by the folder id
-
-    static func folderChangedNotification(managerBundleID: String) -> String { "\(managerBundleID).folderChanged" }
+    static let backgroundArgument = "--background" // launch the manager without opening its window
 
     /// Folder apps are "<manager id>.folder.<uuid>" (see rewrite).
     static func managerBundleID(fromStubID id: String) -> String? {

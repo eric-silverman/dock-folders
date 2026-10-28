@@ -37,5 +37,7 @@
 	<string></string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>NSDockTilePlugIn</key>
+	<string>FolderDockMenu.docktileplugin</string>
 </dict>
 </plist>
