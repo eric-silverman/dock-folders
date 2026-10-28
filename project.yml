@@ -47,7 +47,11 @@ targets:
   DockFoldersTests:
     type: bundle.unit-test
     platform: macOS
-    sources: [Tests, Shared]
+    sources:
+      - Tests
+      - Shared
+      - DockFolders/DockPrefs.swift
+      - DockFolders/StubGenerator.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.esilverman.DockFolders.Tests

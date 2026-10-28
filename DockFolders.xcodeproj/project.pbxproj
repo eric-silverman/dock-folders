@@ -8,24 +8,24 @@
 
 /* Begin PBXBuildFile section */
 		0111F590EC87CCED91906F7C /* FolderPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EA56D836B6E327072218DC6 /* FolderPanel.swift */; };
+		0A23370BD580B3FDD43709E7 /* DockPrefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60664DEF0BCDB407B80AAF5B /* DockPrefs.swift */; };
 		11FA35C9DF1469659E58706A /* DockFoldersApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 472FAB6696738CE99297BD29 /* DockFoldersApp.swift */; };
 		19402D039C2156934BA121F3 /* Folder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB94605F45B0088ACEB76B7 /* Folder.swift */; };
-		30416D26D08B143BDECD0FB1 /* DockPrefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B94A2EE0DBC541301361456 /* DockPrefs.swift */; };
 		3159B07F68F767C9D73399F2 /* FolderStub.app in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 0944784E4E56E8F2E72FAB07 /* FolderStub.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		33C305E9567EF4664D4E1A41 /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CFCC9FDD03A5ACFCB26B7D1 /* AppIcon.swift */; };
 		3AA7BADC2CC4BC44F6B69551 /* Folder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB94605F45B0088ACEB76B7 /* Folder.swift */; };
 		3C952ADC22421B9C2CCEF308 /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CFCC9FDD03A5ACFCB26B7D1 /* AppIcon.swift */; };
 		6A289921597A9A409CA1AA3E /* StubGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95BCBA60CD0A5CA4A189BD52 /* StubGenerator.swift */; };
+		6DEBA1308D91A1230B2E86CB /* ManagerLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32B1D50B87EB929C6F7DD809 /* ManagerLogicTests.swift */; };
 		766AE841B57B580DA5CC5124 /* PanelPlacementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ED2620993BEC993383F4BF0 /* PanelPlacementTests.swift */; };
 		78B6B2196900138DC0FCF4E6 /* PanelPlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4497350E6802CD13A670A2F /* PanelPlacement.swift */; };
 		7E7A4E520DCED837B4EE232D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 323B0BA0FEAFEB17B53088C7 /* AppDelegate.swift */; };
 		9F1975628B566B690CBE26DC /* Folder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB94605F45B0088ACEB76B7 /* Folder.swift */; };
+		B2D402578757955C37579B22 /* DockPrefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60664DEF0BCDB407B80AAF5B /* DockPrefs.swift */; };
 		B445781D6E57C08718107D8E /* PanelPlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4497350E6802CD13A670A2F /* PanelPlacement.swift */; };
 		BA093F91F74CE69158C3CD6B /* PanelPlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4497350E6802CD13A670A2F /* PanelPlacement.swift */; };
-		BA8E003729121EC76262A099 /* DockPrefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B94A2EE0DBC541301361456 /* DockPrefs.swift */; };
-		CD8497372E6FF4DCDD54BDDE /* ConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69DB6F831B1B2E6F643D8E6D /* ConfigTests.swift */; };
 		D74F8F90729983DA525CB89D /* FolderModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CE12F7AE6A2C011640DAF09 /* FolderModel.swift */; };
-		DA9BB794B2D1A8BAA01B51D4 /* DockPrefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B94A2EE0DBC541301361456 /* DockPrefs.swift */; };
+		E369577F53561BDE811F43FC /* StubGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95BCBA60CD0A5CA4A189BD52 /* StubGenerator.swift */; };
 		EEA75B9013832258EC4FAC3E /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CFCC9FDD03A5ACFCB26B7D1 /* AppIcon.swift */; };
 /* End PBXBuildFile section */
 
@@ -58,11 +58,11 @@
 		0CE12F7AE6A2C011640DAF09 /* FolderModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderModel.swift; sourceTree = "<group>"; };
 		2003587CC5C595D704965F52 /* DockFolders.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DockFolders.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		323B0BA0FEAFEB17B53088C7 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		32B1D50B87EB929C6F7DD809 /* ManagerLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerLogicTests.swift; sourceTree = "<group>"; };
 		472FAB6696738CE99297BD29 /* DockFoldersApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockFoldersApp.swift; sourceTree = "<group>"; };
 		4CFCC9FDD03A5ACFCB26B7D1 /* AppIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIcon.swift; sourceTree = "<group>"; };
 		4EA56D836B6E327072218DC6 /* FolderPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderPanel.swift; sourceTree = "<group>"; };
-		69DB6F831B1B2E6F643D8E6D /* ConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigTests.swift; sourceTree = "<group>"; };
-		6B94A2EE0DBC541301361456 /* DockPrefs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockPrefs.swift; sourceTree = "<group>"; };
+		60664DEF0BCDB407B80AAF5B /* DockPrefs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockPrefs.swift; sourceTree = "<group>"; };
 		6ED2620993BEC993383F4BF0 /* PanelPlacementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelPlacementTests.swift; sourceTree = "<group>"; };
 		95BCBA60CD0A5CA4A189BD52 /* StubGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubGenerator.swift; sourceTree = "<group>"; };
 		B40E8CFA6EF770A432DFC1BA /* DockFoldersTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DockFoldersTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -98,7 +98,6 @@
 			isa = PBXGroup;
 			children = (
 				4CFCC9FDD03A5ACFCB26B7D1 /* AppIcon.swift */,
-				6B94A2EE0DBC541301361456 /* DockPrefs.swift */,
 				CEB94605F45B0088ACEB76B7 /* Folder.swift */,
 				E4497350E6802CD13A670A2F /* PanelPlacement.swift */,
 			);
@@ -108,7 +107,7 @@
 		AF2D9E7D88AE4A2BF024BB3C /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				69DB6F831B1B2E6F643D8E6D /* ConfigTests.swift */,
+				32B1D50B87EB929C6F7DD809 /* ManagerLogicTests.swift */,
 				6ED2620993BEC993383F4BF0 /* PanelPlacementTests.swift */,
 			);
 			path = Tests;
@@ -118,6 +117,7 @@
 			isa = PBXGroup;
 			children = (
 				472FAB6696738CE99297BD29 /* DockFoldersApp.swift */,
+				60664DEF0BCDB407B80AAF5B /* DockPrefs.swift */,
 				0CE12F7AE6A2C011640DAF09 /* FolderModel.swift */,
 				EC5605934DDDB422B91EA0CC /* Info.plist */,
 				95BCBA60CD0A5CA4A189BD52 /* StubGenerator.swift */,
@@ -242,7 +242,7 @@
 			files = (
 				3C952ADC22421B9C2CCEF308 /* AppIcon.swift in Sources */,
 				11FA35C9DF1469659E58706A /* DockFoldersApp.swift in Sources */,
-				DA9BB794B2D1A8BAA01B51D4 /* DockPrefs.swift in Sources */,
+				0A23370BD580B3FDD43709E7 /* DockPrefs.swift in Sources */,
 				9F1975628B566B690CBE26DC /* Folder.swift in Sources */,
 				D74F8F90729983DA525CB89D /* FolderModel.swift in Sources */,
 				BA093F91F74CE69158C3CD6B /* PanelPlacement.swift in Sources */,
@@ -256,7 +256,6 @@
 			files = (
 				7E7A4E520DCED837B4EE232D /* AppDelegate.swift in Sources */,
 				EEA75B9013832258EC4FAC3E /* AppIcon.swift in Sources */,
-				30416D26D08B143BDECD0FB1 /* DockPrefs.swift in Sources */,
 				19402D039C2156934BA121F3 /* Folder.swift in Sources */,
 				0111F590EC87CCED91906F7C /* FolderPanel.swift in Sources */,
 				B445781D6E57C08718107D8E /* PanelPlacement.swift in Sources */,
@@ -268,11 +267,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				33C305E9567EF4664D4E1A41 /* AppIcon.swift in Sources */,
-				CD8497372E6FF4DCDD54BDDE /* ConfigTests.swift in Sources */,
-				BA8E003729121EC76262A099 /* DockPrefs.swift in Sources */,
+				B2D402578757955C37579B22 /* DockPrefs.swift in Sources */,
 				3AA7BADC2CC4BC44F6B69551 /* Folder.swift in Sources */,
+				6DEBA1308D91A1230B2E86CB /* ManagerLogicTests.swift in Sources */,
 				78B6B2196900138DC0FCF4E6 /* PanelPlacement.swift in Sources */,
 				766AE841B57B580DA5CC5124 /* PanelPlacementTests.swift in Sources */,
+				E369577F53561BDE811F43FC /* StubGenerator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

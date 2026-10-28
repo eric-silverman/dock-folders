@@ -11,15 +11,17 @@ final class FolderModel {
     var dockNeedsRefresh = false
     private(set) var dockPaths: Set<String> = []
 
-    @ObservationIgnored private var pendingBuilds: [UUID: Task<Void, Never>] = [:]
+    static let rebuildDelay: Duration = .milliseconds(400)
+    /// Latest build per folder. Each build waits for the previous one, so two never write the same app at once.
+    @ObservationIgnored private var builds: [UUID: Task<Bool, Never>] = [:]
 
     init() {
         do {
             folders = try FolderStore.load()
         } catch {
             // Keep the unreadable file instead of overwriting it on the next save.
-            let backup = FolderStore.defaultURL.appendingPathExtension("corrupt")
-            try? FileManager.default.removeItem(at: backup)
+            let stamp = Int(Date().timeIntervalSince1970)
+            let backup = FolderStore.defaultURL.appendingPathExtension("corrupt-\(stamp)")
             try? FileManager.default.moveItem(at: FolderStore.defaultURL, to: backup)
             errorMessage = "folders.json couldn't be read (\(error.localizedDescription)). It was moved to \(backup.lastPathComponent)."
         }
@@ -50,18 +52,27 @@ final class FolderModel {
         let old = StubGenerator.url(for: folders[i].name), new = StubGenerator.url(for: name)
         folders[i].name = name
         if FileManager.default.fileExists(atPath: old.path) { try? FileManager.default.moveItem(at: old, to: new) }
-        if dockPaths.contains(old.path) {
-            editDock { DockPrefs.replacing(old, with: new, label: name, in: $0) }
-            dockNeedsRefresh = true
+        reloadDockState()
+        if dockPaths.contains(old.path), editDock({ DockPrefs.replacing(old, with: new, label: name, in: $0) }) {
+            // The running Dock still holds the old path and would write it back, so restart it once the
+            // renamed app is rebuilt (new name and icon in one restart).
+            save()
+            let build = scheduleBuild(id, after: .zero)
+            Task {
+                _ = await build.value
+                refreshDock()
+            }
+            return
         }
         changed(id)
     }
 
     func addApps(_ urls: [URL], to id: UUID) {
         guard let i = index(id) else { return }
-        let new = urls.filter { $0.pathExtension == "app" }.map(\.path).filter { !folders[i].appPaths.contains($0) }
-        guard !new.isEmpty else { return }
-        folders[i].appPaths += new
+        var paths = folders[i].appPaths
+        for url in urls where url.pathExtension == "app" && !paths.contains(url.path) { paths.append(url.path) }
+        guard paths != folders[i].appPaths else { return }
+        folders[i].appPaths = paths
         changed(id)
     }
 
@@ -80,13 +91,13 @@ final class FolderModel {
     func delete(_ id: UUID) {
         guard let i = index(id) else { return }
         let stub = StubGenerator.url(for: folders[i].name)
-        pendingBuilds.removeValue(forKey: id)?.cancel()
+        builds[id]?.cancel() // a build already running is cleaned up by build() once it sees the folder is gone
         folders.remove(at: i)
         if selection == id { selection = folders.first?.id }
         save()
         try? FileManager.default.trashItem(at: stub, resultingItemURL: nil)
-        if dockPaths.contains(stub.path) {
-            editDock { DockPrefs.removing(stub, from: $0) }
+        reloadDockState()
+        if dockPaths.contains(stub.path), editDock({ DockPrefs.removing(stub, from: $0) }) {
             refreshDock()
         }
     }
@@ -94,14 +105,18 @@ final class FolderModel {
     // MARK: - Dock
 
     func addToDock(_ id: UUID) {
-        guard let folder = folder(id) else { return }
-        pendingBuilds.removeValue(forKey: id)?.cancel()
+        let build = scheduleBuild(id, after: .zero)
         Task {
-            guard await build(folder) else { return }
+            // Look the folder up again: it may have been renamed or deleted while building.
+            guard await build.value, let folder = folder(id) else { return }
             let stub = StubGenerator.url(for: folder.name)
-            editDock { DockPrefs.adding(stub, label: folder.name, to: $0) }
-            refreshDock()
+            if editDock({ DockPrefs.adding(stub, label: folder.name, to: $0) }) { refreshDock() }
         }
+    }
+
+    /// Re-reads the Dock, which the user can change by hand (e.g. dragging a folder app in).
+    func reloadDockState() {
+        dockPaths = DockPrefs.paths()
     }
 
     func refreshDock() {
@@ -123,34 +138,50 @@ final class FolderModel {
         return folders.contains { $0.id != id && StubGenerator.fileName(for: $0.name).lowercased() == file }
     }
 
-    private func editDock(_ change: ([DockPrefs.Tile]) -> [DockPrefs.Tile]) {
-        do { try DockPrefs.update(change) } catch { errorMessage = error.localizedDescription }
-        dockPaths = DockPrefs.paths()
+    /// Returns false if the edit failed (error shown) or changed nothing.
+    @discardableResult
+    private func editDock(_ change: ([DockPrefs.Tile]) -> [DockPrefs.Tile]) -> Bool {
+        defer { reloadDockState() }
+        do { return try DockPrefs.update(change) } catch { errorMessage = error.localizedDescription; return false }
     }
 
     /// Saves now; rebuilds the folder's app once edits pause (icon render + codesign takes a moment).
     private func changed(_ id: UUID) {
         save()
-        pendingBuilds[id]?.cancel()
-        pendingBuilds[id] = Task {
-            try? await Task.sleep(for: .milliseconds(400))
-            guard !Task.isCancelled, let folder = folder(id) else { return }
-            await build(folder)
-        }
+        scheduleBuild(id, after: Self.rebuildDelay)
     }
 
-    // ponytail: a build already running when a rename lands can leave a stale copy under the old name;
-    // serialize builds per folder if that shows up.
     @discardableResult
+    private func scheduleBuild(_ id: UUID, after delay: Duration) -> Task<Bool, Never> {
+        let previous = builds[id]
+        previous?.cancel() // stops it if it's still waiting out its delay
+        let task = Task {
+            _ = await previous?.value
+            if delay > .zero { try? await Task.sleep(for: delay) }
+            guard !Task.isCancelled, let folder = folder(id) else { return false }
+            return await build(folder)
+        }
+        builds[id] = task
+        return task
+    }
+
     private func build(_ folder: Folder) async -> Bool {
+        let built = StubGenerator.url(for: folder.name)
         do {
             try await Task.detached { try StubGenerator.generate(folder) }.value
-            if isInDock(folder) { dockNeedsRefresh = true }
-            return true
         } catch {
             errorMessage = "Couldn't build “\(folder.name)”: \(error.localizedDescription)"
             return false
         }
+        // Deleted or renamed while building: don't leave an orphan app behind.
+        guard self.folder(folder.id)?.name == folder.name else {
+            if !folders.contains(where: { StubGenerator.url(for: $0.name) == built }) {
+                try? FileManager.default.removeItem(at: built)
+            }
+            return false
+        }
+        if isInDock(folder) { dockNeedsRefresh = true }
+        return true
     }
 
     private func save() {

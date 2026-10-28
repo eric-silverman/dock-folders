@@ -24,7 +24,7 @@ The Xcode project is generated from `project.yml`. After adding/removing files, 
 3. Drag apps in from Finder, or click **Add Apps…**. Drag rows to reorder.
 4. Click **Add to Dock**. After you confirm, the Dock restarts with the folder at the end of the apps side. To place it yourself, choose **Show in Finder Instead** and drag it into the Dock.
 
-App-list changes take effect the next time you open the folder. Renaming a folder, or changing its first 9 apps, rebuilds the folder's icon. The Dock caches icons, so click **Refresh Dock** in the toolbar when it appears.
+App-list changes take effect the next time you open the folder. Changing a folder's first 9 apps rebuilds its icon. The Dock caches icons, so click **Refresh Dock** in the toolbar when it appears. Renaming a folder that's in the Dock restarts the Dock automatically; otherwise its tile would break.
 
 **Delete Folder** moves the folder app to the Trash and takes it out of the Dock. The apps inside it aren't touched.
 
@@ -33,12 +33,13 @@ App-list changes take effect the next time you open the folder. Renaming a folde
 | Path | What |
 |---|---|
 | `~/Library/Application Support/DockFolders/folders.json` | Folder names and app lists |
+| `~/Library/Application Support/DockFolders/persistent-apps-original.plist` | Your Dock's app list from before DockFolders first changed it (written once) |
 | `~/Library/Application Support/DockFolders/persistent-apps-backup.plist` | Your Dock's app list from just before DockFolders last changed it |
 | `~/Applications/DockFolders/*.app` | Generated folder apps (ad-hoc signed) |
 
 ## Known limitations
 
-- **Icon caching:** after you rename a folder or change its apps, the Dock can keep showing the old icon or name until it restarts (**Refresh Dock**).
+- **Icon caching:** after you change a folder's apps, the Dock can keep showing the old icon or name until it restarts (**Refresh Dock**).
 - **Position:** the grid opens at the mouse pointer, above or beside the Dock, rather than lined up with the exact tile.
 - **Ad-hoc signing:** folder apps are signed locally and work on this Mac. Copying them to another Mac isn't supported.
 - **Auto-hidden Dock:** the grid guesses which edge the Dock is on from where the mouse is.

@@ -10,7 +10,9 @@ enum StubGenerator {
     static let directory = FileManager.default.homeDirectoryForCurrentUser.appending(path: "Applications/DockFolders")
 
     static func fileName(for name: String) -> String {
-        var s = name.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-")
+        // NFC so "Café" typed and pasted map to the same file (APFS treats them as one name).
+        var s = name.precomposedStringWithCanonicalMapping
+            .replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-")
         if s.hasPrefix(".") { s = "_" + s.dropFirst() }
         return s
     }
@@ -43,6 +45,8 @@ enum StubGenerator {
         try fm.createDirectory(at: resources, withIntermediateDirectories: true)
         try FolderIcon.icns(appPaths: folder.appPaths).write(to: resources.appending(path: StubInfo.iconName + ".icns"))
 
+        // A downloaded DockFolders.app would pass its quarantine flag on to every folder app.
+        try run("/usr/bin/xattr", "-dr", "com.apple.quarantine", staged.path)
         try run("/usr/bin/codesign", "--force", "--deep", "-s", "-", staged.path)
 
         if fm.fileExists(atPath: dest.path) {
@@ -59,12 +63,13 @@ enum StubGenerator {
         p.executableURL = URL(fileURLWithPath: tool)
         p.arguments = args
         let err = Pipe()
+        p.standardOutput = FileHandle.nullDevice
         p.standardError = err
         try p.run()
+        let stderr = err.fileHandleForReading.readDataToEndOfFile() // drain before waiting so a full pipe can't block
         p.waitUntilExit()
         guard p.terminationStatus == 0 else {
-            let msg = String(decoding: err.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
-            throw Failure(errorDescription: "\(tool) failed: \(msg)")
+            throw Failure(errorDescription: "\(tool) failed: \(String(decoding: stderr, as: UTF8.self))")
         }
     }
 }

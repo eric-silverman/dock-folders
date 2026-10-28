@@ -68,6 +68,9 @@ struct ContentView: View {
             Text(model.errorMessage ?? "")
         }
         .onAppear { NSApp.activate() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            model.reloadDockState()
+        }
     }
 }
 
