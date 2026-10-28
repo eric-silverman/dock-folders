@@ -105,6 +105,17 @@ private struct FolderDetail: View {
                 }
             }
 
+            HStack(spacing: 16) {
+                Picker("Show as", selection: Binding(get: { folder.layout },
+                                                     set: { model.setLayout($0, for: folder.id) })) {
+                    Label("Grid", systemImage: "square.grid.3x3").tag(FolderLayout.grid)
+                    Label("List", systemImage: "list.bullet").tag(FolderLayout.list)
+                }
+                .pickerStyle(.segmented)
+                .fixedSize()
+                ColorSwatches(selection: folder.color) { model.setColor($0, for: folder.id) }
+            }
+
             HStack {
                 Button("Add Apps…", action: pickApps)
                 Spacer()
@@ -146,6 +157,33 @@ private struct FolderDetail: View {
         panel.directoryURL = URL(fileURLWithPath: "/Applications")
         panel.prompt = "Add"
         if panel.runModal() == .OK { model.addApps(panel.urls, to: folder.id) }
+    }
+}
+
+/// Dock icon background color picker.
+private struct ColorSwatches: View {
+    let selection: FolderColor
+    let pick: (FolderColor) -> Void
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ForEach(FolderColor.allCases, id: \.self) { color in
+                let c = color.rgb
+                Button {
+                    pick(color)
+                } label: {
+                    Circle()
+                        .fill(Color(.sRGB, red: c.red, green: c.green, blue: c.blue))
+                        .frame(width: 18, height: 18)
+                        .overlay(Circle().strokeBorder(.primary, lineWidth: color == selection ? 2 : 0).padding(-3))
+                }
+                .buttonStyle(.plain)
+                .help(color.rawValue.capitalized)
+                .accessibilityLabel("\(color.rawValue.capitalized) icon")
+                .accessibilityAddTraits(color == selection ? .isSelected : [])
+            }
+        }
+        .padding(.horizontal, 3)
     }
 }
 

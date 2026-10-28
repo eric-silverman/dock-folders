@@ -8,9 +8,18 @@ struct FolderStoreTests {
         let folders = [
             Folder(id: UUID(), name: "Dev", appPaths: ["/Applications/Xcode.app", "/System/Applications/Utilities/Terminal.app"]),
             Folder(id: UUID(), name: "Empty", appPaths: []),
+            Folder(id: UUID(), name: "Styled", appPaths: [], layout: .list, color: .purple),
         ]
         try FolderStore.save(folders, to: url)
         #expect(try FolderStore.load(from: url) == folders)
+    }
+
+    @Test func olderFilesWithoutDisplayOptionsStillLoad() throws {
+        let json = #"[{"id":"11111111-2222-3333-4444-555555555555","name":"Old","appPaths":["/Applications/Safari.app"]}]"#
+        let folder = try JSONDecoder().decode([Folder].self, from: Data(json.utf8))[0]
+        #expect(folder.name == "Old")
+        #expect(folder.layout == .grid)
+        #expect(folder.color == .graphite)
     }
 
     @Test func missingFileIsEmpty() throws {

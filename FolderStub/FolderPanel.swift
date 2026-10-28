@@ -1,20 +1,28 @@
 import AppKit
 import QuartzCore
 
-/// Borderless vibrant grid of app icons, styled like a Dock stack grid.
+/// Borderless vibrant popup of a folder's apps: a Dock-stack-style icon grid, or a compact list.
 final class FolderPanel: NSPanel {
     static let cell = NSSize(width: 96, height: 96)
     static let padding: CGFloat = 12
     static let maxColumns = 6
+    static let row = NSSize(width: 260, height: 30)
+    static let listPadding: CGFloat = 6
+    static let maxListHeight: CGFloat = 480     // taller lists scroll
     static let rise: CGFloat = 12              // open animation: distance the grid slides out of the Dock
     static let openDuration: TimeInterval = 0.12
 
-    init(apps: [URL], onPick: @escaping (URL) -> Void) {
+    init(apps: [URL], layout: FolderLayout = .grid, onPick: @escaping (URL) -> Void) {
         let n = max(apps.count, 1)
         let cols = min(Self.maxColumns, Int(Double(n).squareRoot().rounded(.up)))
         let rows = (n + cols - 1) / cols
-        let size = NSSize(width: CGFloat(cols) * Self.cell.width + 2 * Self.padding,
-                          height: CGFloat(rows) * Self.cell.height + 2 * Self.padding)
+        let list = layout == .list && !apps.isEmpty
+        let listHeight = CGFloat(apps.count) * Self.row.height
+        let size = list
+            ? NSSize(width: Self.row.width + 2 * Self.listPadding,
+                     height: min(listHeight, Self.maxListHeight) + 2 * Self.listPadding)
+            : NSSize(width: CGFloat(cols) * Self.cell.width + 2 * Self.padding,
+                     height: CGFloat(rows) * Self.cell.height + 2 * Self.padding)
 
         // Non-activating: macOS won't let a Dock-launched UI-element app take focus, and a regular panel
         // hides while its app is inactive. This one shows anyway and can still be key (for Escape).
@@ -45,11 +53,24 @@ final class FolderPanel: NSPanel {
                                          y: (size.height - label.frame.height) / 2))
             effect.addSubview(label)
         }
+        if list {
+            let rows = FlippedView(frame: NSRect(x: 0, y: 0, width: Self.row.width, height: listHeight))
+            for (i, url) in apps.enumerated() {
+                let frame = NSRect(origin: NSPoint(x: 0, y: CGFloat(i) * Self.row.height), size: Self.row)
+                rows.addSubview(AppItemView(url: url, frame: frame, style: .row, onPick: onPick))
+            }
+            let scroll = NSScrollView(frame: effect.bounds.insetBy(dx: Self.listPadding, dy: Self.listPadding))
+            scroll.drawsBackground = false
+            scroll.hasVerticalScroller = listHeight > Self.maxListHeight
+            scroll.documentView = rows
+            effect.addSubview(scroll)
+            return
+        }
         for (i, url) in apps.enumerated() {
             let row = i / cols, col = i % cols
             let origin = NSPoint(x: Self.padding + CGFloat(col) * Self.cell.width,
                                  y: Self.padding + CGFloat(rows - 1 - row) * Self.cell.height)
-            effect.addSubview(AppItemView(url: url, frame: NSRect(origin: origin, size: Self.cell), onPick: onPick))
+            effect.addSubview(AppItemView(url: url, frame: NSRect(origin: origin, size: Self.cell), style: .tile, onPick: onPick))
         }
     }
 
@@ -86,20 +107,27 @@ final class FolderPanel: NSPanel {
     }
 }
 
+/// Top-to-bottom coordinates, so list rows start at the top of the scroll view.
+private final class FlippedView: NSView {
+    override var isFlipped: Bool { true }
+}
+
 private final class AppItemView: NSView {
+    enum Style { case tile, row }
+
     private let url: URL
     private let available: Bool
     private let onPick: (URL) -> Void
 
-    init(url: URL, frame: NSRect, onPick: @escaping (URL) -> Void) {
+    init(url: URL, frame: NSRect, style: Style, onPick: @escaping (URL) -> Void) {
         self.url = url
         self.onPick = onPick
         available = FileManager.default.fileExists(atPath: url.path)
         super.init(frame: frame)
         wantsLayer = true
-        layer?.cornerRadius = 8
+        layer?.cornerRadius = style == .tile ? 8 : 6
 
-        let icon = NSImageView(frame: NSRect(x: (frame.width - 64) / 2, y: 26, width: 64, height: 64))
+        let icon = NSImageView()
         icon.image = appIcon(forPath: url.path)
         icon.imageScaling = .scaleProportionallyUpOrDown
         addSubview(icon)
@@ -107,11 +135,22 @@ private final class AppItemView: NSView {
         let name = available ? FileManager.default.displayName(atPath: url.path)
                              : url.deletingPathExtension().lastPathComponent
         let label = NSTextField(labelWithString: name)
-        label.font = .systemFont(ofSize: 11)
-        label.alignment = .center
         label.lineBreakMode = .byTruncatingTail
-        label.frame = NSRect(x: 4, y: 6, width: frame.width - 8, height: 16)
         addSubview(label)
+
+        switch style {
+        case .tile:
+            icon.frame = NSRect(x: (frame.width - 64) / 2, y: 26, width: 64, height: 64)
+            label.font = .systemFont(ofSize: 11)
+            label.alignment = .center
+            label.frame = NSRect(x: 4, y: 6, width: frame.width - 8, height: 16)
+        case .row:
+            icon.frame = NSRect(x: 6, y: (frame.height - 24) / 2, width: 24, height: 24)
+            label.font = .systemFont(ofSize: 13)
+            label.sizeToFit()
+            label.frame = NSRect(x: 38, y: (frame.height - label.frame.height) / 2,
+                                 width: frame.width - 46, height: label.frame.height)
+        }
 
         if !available {
             alphaValue = 0.35

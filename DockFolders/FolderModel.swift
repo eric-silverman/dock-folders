@@ -82,6 +82,19 @@ final class FolderModel {
         changed(id)
     }
 
+    /// Layout is read by the folder app each time it opens, so no rebuild is needed.
+    func setLayout(_ layout: FolderLayout, for id: UUID) {
+        guard let i = index(id), folders[i].layout != layout else { return }
+        folders[i].layout = layout
+        save()
+    }
+
+    func setColor(_ color: FolderColor, for id: UUID) {
+        guard let i = index(id), folders[i].color != color else { return }
+        folders[i].color = color
+        changed(id) // icon rebuild
+    }
+
     func removeApp(_ path: String, from id: UUID) {
         guard let i = index(id) else { return }
         folders[i].appPaths.removeAll { $0 == path }

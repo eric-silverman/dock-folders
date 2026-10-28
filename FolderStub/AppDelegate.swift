@@ -3,12 +3,11 @@ import AppKit
 @main
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    /// This folder's apps: DockFolderID from our Info.plist, contents from folders.json.
-    static func loadApps() -> [URL] {
+    /// This folder: DockFolderID from our Info.plist, contents from folders.json.
+    static func loadFolder() -> Folder? {
         guard let idString = Bundle.main.object(forInfoDictionaryKey: StubInfo.folderIDKey) as? String,
-              let id = UUID(uuidString: idString),
-              let folder = (try? FolderStore.load())?.first(where: { $0.id == id }) else { return [] }
-        return folder.appPaths.map { URL(fileURLWithPath: $0) }
+              let id = UUID(uuidString: idString) else { return nil }
+        return (try? FolderStore.load())?.first { $0.id == id }
     }
 
     private var panel: FolderPanel?
@@ -23,7 +22,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let panel = FolderPanel(apps: Self.loadApps()) { [weak self] url in self?.launch(url) }
+        let folder = Self.loadFolder()
+        let apps = (folder?.appPaths ?? []).map { URL(fileURLWithPath: $0) }
+        let panel = FolderPanel(apps: apps, layout: folder?.layout ?? .grid) { [weak self] url in self?.launch(url) }
         panel.show(near: NSEvent.mouseLocation)
         self.panel = panel
         // We never become the active app (macOS refuses focus to Dock-launched UI-element apps), so dismiss

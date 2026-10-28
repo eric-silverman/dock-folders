@@ -43,7 +43,7 @@ enum StubGenerator {
 
         let resources = staged.appending(path: "Contents/Resources")
         try fm.createDirectory(at: resources, withIntermediateDirectories: true)
-        try FolderIcon.icns(appPaths: folder.appPaths).write(to: resources.appending(path: StubInfo.iconName + ".icns"))
+        try FolderIcon.icns(appPaths: folder.appPaths, color: folder.color).write(to: resources.appending(path: StubInfo.iconName + ".icns"))
 
         // A downloaded DockFolders.app would pass its quarantine flag on to every folder app.
         try run("/usr/bin/xattr", "-dr", "com.apple.quarantine", staged.path)
@@ -82,13 +82,13 @@ enum FolderIcon {
         ("ic13", 256), ("ic08", 256), ("ic14", 512), ("ic09", 512), ("ic10", 1024),
     ]
 
-    static func icns(appPaths: [String]) -> Data {
+    static func icns(appPaths: [String], color: FolderColor = .graphite) -> Data {
         let icons = appPaths.filter { FileManager.default.fileExists(atPath: $0) }.prefix(9)
             .map(appIcon(forPath:))
         var pngs: [Int: Data] = [:]
         var body = Data()
         for (type, px) in slots {
-            let png = pngs[px] ?? render(icons, pixels: px)
+            let png = pngs[px] ?? render(icons, color: color, pixels: px)
             pngs[px] = png
             body.append(Data(type.utf8))
             body.append(bigEndian(png.count + 8))
@@ -101,7 +101,7 @@ enum FolderIcon {
         withUnsafeBytes(of: UInt32(n).bigEndian) { Data($0) }
     }
 
-    private static func render(_ icons: [NSImage], pixels px: Int) -> Data {
+    private static func render(_ icons: [NSImage], color: FolderColor, pixels px: Int) -> Data {
         let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: px, pixelsHigh: px, bitsPerSample: 8,
                                    samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB,
                                    bytesPerRow: 0, bitsPerPixel: 0)!
@@ -112,7 +112,11 @@ enum FolderIcon {
         let s = CGFloat(px)
         let body = NSRect(x: 0, y: 0, width: s, height: s).insetBy(dx: s * 0.1, dy: s * 0.1) // macOS icon grid margin
         let shape = NSBezierPath(roundedRect: body, xRadius: body.width * 0.225, yRadius: body.width * 0.225)
-        NSGradient(starting: NSColor(white: 0.42, alpha: 1), ending: NSColor(white: 0.22, alpha: 1))!.draw(in: shape, angle: -90)
+        let c = color.rgb
+        let base = NSColor(srgbRed: c.red, green: c.green, blue: c.blue, alpha: 1)
+        let top = base.blended(withFraction: 0.25, of: .white) ?? base
+        let bottom = base.blended(withFraction: 0.25, of: .black) ?? base
+        NSGradient(starting: top, ending: bottom)!.draw(in: shape, angle: -90)
 
         let inner = body.insetBy(dx: body.width * 0.08, dy: body.width * 0.08)
         for (icon, r) in zip(icons, cells(count: icons.count, in: inner)) {
