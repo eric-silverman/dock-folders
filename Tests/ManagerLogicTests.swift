@@ -41,6 +41,32 @@ struct FolderStoreTests {
     }
 }
 
+struct DroppedAppsTests {
+    @Test func addAppsSkipsNonAppsAndDuplicates() {
+        var folder = Folder(id: UUID(), name: "F", appPaths: ["/Applications/A.app"])
+        let added = folder.addApps(["/Applications/A.app", "/Applications/B.app", "/tmp/notes.txt", "/Applications/B.app"]
+            .map { URL(fileURLWithPath: $0) })
+        #expect(added == ["/Applications/B.app"])
+        #expect(folder.appPaths == ["/Applications/A.app", "/Applications/B.app"])
+    }
+
+    @Test func storeUpdateChangesOneFolder() throws {
+        let url = FileManager.default.temporaryDirectory.appending(path: "DockFoldersTests-\(UUID())/folders.json")
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let a = Folder(id: UUID(), name: "A", appPaths: []), b = Folder(id: UUID(), name: "B", appPaths: [])
+        try FolderStore.save([a, b], to: url)
+        #expect(try FolderStore.update(b.id, at: url) { $0.addApps([URL(fileURLWithPath: "/Applications/X.app")]) })
+        #expect(try FolderStore.load(from: url).map(\.appPaths) == [[], ["/Applications/X.app"]])
+        #expect(try FolderStore.update(UUID(), at: url) { _ in } == false)
+    }
+
+    @Test func managerIDFromFolderAppID() {
+        #expect(StubInfo.managerBundleID(fromStubID: "com.esilverman.DockFolders.folder.11111111-2222-3333-4444-555555555555")
+                == "com.esilverman.DockFolders")
+        #expect(StubInfo.managerBundleID(fromStubID: "com.esilverman.DockFolders.FolderStub") == nil)
+    }
+}
+
 struct StubInfoTests {
     @Test func rewritesIdentityNameAndIcon() {
         let folder = Folder(id: UUID(uuidString: "11111111-2222-3333-4444-555555555555")!, name: "Dev Tools", appPaths: [])

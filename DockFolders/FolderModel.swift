@@ -14,6 +14,7 @@ final class FolderModel {
     static let rebuildDelay: Duration = .milliseconds(400)
     /// Latest build per folder. Each build waits for the previous one, so two never write the same app at once.
     @ObservationIgnored private var builds: [UUID: Task<Bool, Never>] = [:]
+    @ObservationIgnored private var folderChangedObserver: Any?
 
     init() {
         do {
@@ -27,6 +28,31 @@ final class FolderModel {
         }
         selection = folders.first?.id
         dockPaths = DockPrefs.paths()
+
+        // Folder apps tell us when apps were dropped onto them (see StubInfo), or launch us to rebuild.
+        let managerID = Bundle.main.bundleIdentifier ?? ""
+        folderChangedObserver = DistributedNotificationCenter.default().addObserver(
+            forName: .init(StubInfo.folderChangedNotification(managerBundleID: managerID)), object: nil, queue: .main
+        ) { [weak self] note in
+            let id = (note.object as? String).flatMap(UUID.init(uuidString:))
+            MainActor.assumeIsolated { if let id { self?.folderChangedOnDisk(id) } }
+        }
+        let args = CommandLine.arguments
+        if let i = args.firstIndex(of: StubInfo.rebuildArgument), i + 1 < args.count,
+           let id = UUID(uuidString: args[i + 1]) {
+            folderChangedOnDisk(id)
+        }
+    }
+
+    /// A folder app added apps to folders.json: reload, rebuild its icon, and restart the Dock so it shows.
+    func folderChangedOnDisk(_ id: UUID) {
+        if let fresh = try? FolderStore.load() { folders = fresh }
+        let build = scheduleBuild(id, after: .zero)
+        Task {
+            guard await build.value, let folder = folder(id) else { return }
+            reloadDockState()
+            if isInDock(folder) { refreshDock() }
+        }
     }
 
     func folder(_ id: UUID) -> Folder? { folders.first { $0.id == id } }
@@ -68,11 +94,7 @@ final class FolderModel {
     }
 
     func addApps(_ urls: [URL], to id: UUID) {
-        guard let i = index(id) else { return }
-        var paths = folders[i].appPaths
-        for url in urls where url.pathExtension == "app" && !paths.contains(url.path) { paths.append(url.path) }
-        guard paths != folders[i].appPaths else { return }
-        folders[i].appPaths = paths
+        guard let i = index(id), !folders[i].addApps(urls).isEmpty else { return }
         changed(id)
     }
 

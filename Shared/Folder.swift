@@ -21,6 +21,20 @@ extension Folder {
     }
 }
 
+extension Folder {
+    /// Appends the .app bundles that aren't already in the folder (also de-duplicating within `urls`).
+    /// Returns the paths that were added.
+    @discardableResult
+    mutating func addApps(_ urls: [URL]) -> [String] {
+        var added: [String] = []
+        for url in urls where url.pathExtension == "app" && !appPaths.contains(url.path) {
+            appPaths.append(url.path)
+            added.append(url.path)
+        }
+        return added
+    }
+}
+
 /// How the popup shows the folder's apps.
 enum FolderLayout: String, Codable, CaseIterable, Sendable {
     case grid, list
@@ -57,6 +71,16 @@ enum FolderStore {
         return try JSONDecoder().decode([Folder].self, from: Data(contentsOf: url))
     }
 
+    /// Load, change one folder, save. Returns false if there's no folder with that id.
+    @discardableResult
+    static func update(_ id: UUID, at url: URL = defaultURL, _ change: (inout Folder) -> Void) throws -> Bool {
+        var folders = try load(from: url)
+        guard let i = folders.firstIndex(where: { $0.id == id }) else { return false }
+        change(&folders[i])
+        try save(folders, to: url)
+        return true
+    }
+
     static func save(_ folders: [Folder], to url: URL = defaultURL) throws {
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         let encoder = JSONEncoder()
@@ -69,6 +93,18 @@ enum FolderStore {
 enum StubInfo {
     static let folderIDKey = "DockFolderID"
     static let iconName = "FolderIcon"
+
+    // A folder app that changed folders.json (apps dropped on its tile) asks the manager to rebuild it: by
+    // distributed notification if the manager is running, else by launching it with these arguments.
+    static let backgroundArgument = "--background" // launch without opening the window
+    static let rebuildArgument = "--rebuild"       // followed by the folder id
+
+    static func folderChangedNotification(managerBundleID: String) -> String { "\(managerBundleID).folderChanged" }
+
+    /// Folder apps are "<manager id>.folder.<uuid>" (see rewrite).
+    static func managerBundleID(fromStubID id: String) -> String? {
+        id.range(of: ".folder.", options: .backwards).map { String(id[..<$0.lowerBound]) }
+    }
 
     static func rewrite(_ plist: [String: Any], folder: Folder, managerBundleID: String) -> [String: Any] {
         var p = plist

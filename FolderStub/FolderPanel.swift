@@ -56,7 +56,7 @@ final class FolderPanel: NSPanel {
                          : "Open \(files.count) items with…"
     }
 
-    init(apps: [URL], layout: FolderLayout = .grid, files: [URL] = [],
+    init(apps: [URL], layout: FolderLayout = .grid, files: [URL] = [], notice: String? = nil,
          handlers: (UTType) -> [URL] = { NSWorkspace.shared.urlsForApplications(toOpen: $0) },
          onPick: @escaping (URL) -> Void) {
         let n = max(apps.count, 1)
@@ -69,8 +69,9 @@ final class FolderPanel: NSPanel {
         // Dropped files: dim apps Launch Services says can't open them (still clickable; declarations are
         // incomplete for some apps).
         let canOpen = Self.appsAbleToOpen(files, handlers: handlers)
-        let header: CGFloat = files.isEmpty ? 0 : Self.headerHeight
-        let headerText = Self.header(for: files)
+        // Title row: "Open … with" for dropped files, or a notice such as "Added “Spotify”".
+        let headerText: String? = files.isEmpty ? notice : Self.header(for: files)
+        let header: CGFloat = headerText == nil ? 0 : Self.headerHeight
         let headerFont = NSFont.systemFont(ofSize: 12, weight: .semibold)
         let listHeight = CGFloat(apps.count) * Self.row.height
         var size = list
@@ -80,7 +81,7 @@ final class FolderPanel: NSPanel {
                      height: CGFloat(rows) * Self.cell.height + 2 * Self.padding)
         size.height += header
         let gridWidth = size.width
-        if !files.isEmpty { // widen a small grid so the title isn't cut to "Open “Q…” with…"
+        if let headerText { // widen a small grid so the title isn't cut to "Open “Q…” with…"
             let needed = ceil((headerText as NSString).size(withAttributes: [.font: headerFont]).width) + 2 * Self.headerInset + 4
             size.width = max(size.width, min(needed, Self.maxHeaderWidth))
         }
@@ -114,13 +115,15 @@ final class FolderPanel: NSPanel {
                                          y: (size.height - label.frame.height) / 2))
             effect.addSubview(label)
         }
-        if !files.isEmpty {
+        if let headerText {
             let title = NSTextField(labelWithString: headerText)
             title.font = headerFont
             title.textColor = .secondaryLabelColor
             title.lineBreakMode = .byTruncatingMiddle
-            title.toolTip = files.prefix(20).map(\.lastPathComponent).joined(separator: "\n")
-                + (files.count > 20 ? "\n…" : "")
+            if !files.isEmpty {
+                title.toolTip = files.prefix(20).map(\.lastPathComponent).joined(separator: "\n")
+                    + (files.count > 20 ? "\n…" : "")
+            }
             title.frame = NSRect(x: Self.headerInset, y: size.height - header + 2,
                                  width: size.width - 2 * Self.headerInset, height: header - 10)
             effect.addSubview(title)
