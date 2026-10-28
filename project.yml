@@ -10,6 +10,27 @@ settings:
     CODE_SIGN_IDENTITY: "-"
     DEVELOPMENT_TEAM: ""
 targets:
+  DockFolders:
+    type: application
+    platform: macOS
+    sources: [DockFolders, Shared]
+    dependencies:
+      # The template every folder app is copied from.
+      - target: FolderStub
+        embed: true
+        codeSign: false
+        copy:
+          destination: resources
+    info:
+      path: DockFolders/Info.plist
+      properties:
+        LSUIElement: true
+        CFBundleName: DockFolders
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.esilverman.DockFolders
+    scheme:
+      testTargets: [DockFoldersTests]
   FolderStub:
     type: application
     platform: macOS
@@ -23,12 +44,15 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.esilverman.DockFolders.FolderStub
-    scheme:
-      testTargets: [DockFoldersTests]
   DockFoldersTests:
     type: bundle.unit-test
     platform: macOS
-    sources: [Tests, Shared]
+    sources:
+      - Tests
+      - Shared
+      - DockFolders/DockPrefs.swift
+      - DockFolders/StubGenerator.swift
+      - FolderStub/FolderPanel.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.esilverman.DockFolders.Tests
