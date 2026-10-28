@@ -1,5 +1,6 @@
 import AppKit
 import QuartzCore
+import UniformTypeIdentifiers
 
 /// Borderless vibrant popup of a folder's apps: a Dock-stack-style icon grid, or a compact list.
 final class FolderPanel: NSPanel {
@@ -12,6 +13,11 @@ final class FolderPanel: NSPanel {
     static let rise: CGFloat = 12              // open animation: distance the popup slides out of the Dock
     static let openDuration: TimeInterval = 0.12
     static let headerHeight: CGFloat = 28      // "Open … with" title when files were dropped on the folder
+    static let headerInset: CGFloat = 12
+    static let maxHeaderWidth: CGFloat = 320    // a small grid widens up to this to fit the title
+    static let maxTypesToCheck = 20             // more distinct dropped file types than this: skip dimming
+    static let dimmedAlpha: CGFloat = 0.45      // may not open the dropped files (lighter than missing)
+    static let unavailableAlpha: CGFloat = 0.35 // app no longer on disk
 
     private var scrollObserver: Any?
 
@@ -31,12 +37,28 @@ final class FolderPanel: NSPanel {
         return handlersPerFile.dropFirst().reduce(Set(first.map(canonicalPath))) { $0.intersection($1.map(canonicalPath)) }
     }
 
+    nonisolated static func contentType(of url: URL) -> UTType {
+        (try? url.resourceValues(forKeys: [.contentTypeKey]).contentType)
+            ?? UTType(filenameExtension: url.pathExtension) ?? .item
+    }
+
+    /// Apps that can open every dropped file, asking Launch Services once per file type, so a drop of 300 photos
+    /// is one query on the open path. nil (no dimming) when there are no files or too many types to check.
+    static func appsAbleToOpen(_ files: [URL], type: (URL) -> UTType = contentType(of:),
+                               handlers: (UTType) -> [URL]) -> Set<String>? {
+        let types = Set(files.map(type))
+        guard !types.isEmpty, types.count <= maxTypesToCheck else { return nil }
+        return appsAbleToOpenAll(types.map(handlers))
+    }
+
     static func header(for files: [URL]) -> String {
         files.count == 1 ? "Open “\(FileManager.default.displayName(atPath: files[0].path))” with…"
                          : "Open \(files.count) items with…"
     }
 
-    init(apps: [URL], layout: FolderLayout = .grid, files: [URL] = [], onPick: @escaping (URL) -> Void) {
+    init(apps: [URL], layout: FolderLayout = .grid, files: [URL] = [],
+         handlers: (UTType) -> [URL] = { NSWorkspace.shared.urlsForApplications(toOpen: $0) },
+         onPick: @escaping (URL) -> Void) {
         let n = max(apps.count, 1)
         let cols = min(Self.maxColumns, Int(Double(n).squareRoot().rounded(.up)))
         let rows = (n + cols - 1) / cols
@@ -46,9 +68,10 @@ final class FolderPanel: NSPanel {
             .filter { $0.activationPolicy == .regular }.map(\.bundleURL))
         // Dropped files: dim apps Launch Services says can't open them (still clickable; declarations are
         // incomplete for some apps).
-        let canOpen: Set<String>? = files.isEmpty ? nil
-            : Self.appsAbleToOpenAll(files.map { NSWorkspace.shared.urlsForApplications(toOpen: $0) })
+        let canOpen = Self.appsAbleToOpen(files, handlers: handlers)
         let header: CGFloat = files.isEmpty ? 0 : Self.headerHeight
+        let headerText = Self.header(for: files)
+        let headerFont = NSFont.systemFont(ofSize: 12, weight: .semibold)
         let listHeight = CGFloat(apps.count) * Self.row.height
         var size = list
             ? NSSize(width: Self.row.width + 2 * Self.listPadding,
@@ -56,6 +79,11 @@ final class FolderPanel: NSPanel {
             : NSSize(width: CGFloat(cols) * Self.cell.width + 2 * Self.padding,
                      height: CGFloat(rows) * Self.cell.height + 2 * Self.padding)
         size.height += header
+        let gridWidth = size.width
+        if !files.isEmpty { // widen a small grid so the title isn't cut to "Open “Q…” with…"
+            let needed = ceil((headerText as NSString).size(withAttributes: [.font: headerFont]).width) + 2 * Self.headerInset + 4
+            size.width = max(size.width, min(needed, Self.maxHeaderWidth))
+        }
 
         // Non-activating: macOS won't let a Dock-launched UI-element app take focus, and a regular panel
         // hides while its app is inactive. This one shows anyway and can still be key (for Escape).
@@ -87,11 +115,14 @@ final class FolderPanel: NSPanel {
             effect.addSubview(label)
         }
         if !files.isEmpty {
-            let title = NSTextField(labelWithString: Self.header(for: files))
-            title.font = .systemFont(ofSize: 12, weight: .semibold)
+            let title = NSTextField(labelWithString: headerText)
+            title.font = headerFont
             title.textColor = .secondaryLabelColor
             title.lineBreakMode = .byTruncatingMiddle
-            title.frame = NSRect(x: 12, y: size.height - header + 2, width: size.width - 24, height: header - 10)
+            title.toolTip = files.prefix(20).map(\.lastPathComponent).joined(separator: "\n")
+                + (files.count > 20 ? "\n…" : "")
+            title.frame = NSRect(x: Self.headerInset, y: size.height - header + 2,
+                                 width: size.width - 2 * Self.headerInset, height: header - 10)
             effect.addSubview(title)
         }
         func dimmed(_ url: URL) -> Bool { canOpen.map { !$0.contains(Self.canonicalPath(url)) } ?? false }
@@ -124,7 +155,7 @@ final class FolderPanel: NSPanel {
         }
         for (i, url) in apps.enumerated() {
             let row = i / cols, col = i % cols
-            let origin = NSPoint(x: Self.padding + CGFloat(col) * Self.cell.width,
+            let origin = NSPoint(x: (size.width - gridWidth) / 2 + Self.padding + CGFloat(col) * Self.cell.width,
                                  y: Self.padding + CGFloat(rows - 1 - row) * Self.cell.height)
             effect.addSubview(AppItemView(url: url, frame: NSRect(origin: origin, size: Self.cell), style: .tile,
                                           running: running.contains(Self.canonicalPath(url)),
@@ -228,11 +259,11 @@ private final class AppItemView: NSView {
         setAccessibilityLabel(running ? "\(name), running" : name)
 
         if available && dimmed {
-            alphaValue = 0.45
+            alphaValue = FolderPanel.dimmedAlpha
             toolTip = "\(name) may not open this"
         }
         if !available {
-            alphaValue = 0.35
+            alphaValue = FolderPanel.unavailableAlpha
             toolTip = "Not found: \(url.path)"
         }
         addTrackingArea(NSTrackingArea(rect: .zero, options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],

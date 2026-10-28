@@ -1,5 +1,6 @@
 import AppKit
 import Testing
+import UniformTypeIdentifiers
 
 @MainActor
 struct FolderPanelTests {
@@ -34,13 +35,43 @@ struct FolderPanelTests {
         #expect(FolderPanel.appsAbleToOpenAll([[a], []]) == [])
     }
 
-    @Test func droppedFilesAddAHeader() {
+    @Test func droppedFilesAddAHeaderAndWidenSmallGrids() {
         let apps = [URL(fileURLWithPath: "/Applications/A.app")]
+        let files = [URL(fileURLWithPath: "/tmp/Quarterly Report.pdf"), URL(fileURLWithPath: "/tmp/b.txt")]
         let plain = FolderPanel(apps: apps) { _ in }
-        let withFiles = FolderPanel(apps: apps, files: [URL(fileURLWithPath: "/tmp/a.txt")]) { _ in }
+        let withFiles = FolderPanel(apps: apps, files: files, handlers: { _ in [] }) { _ in }
         #expect(withFiles.frame.height == plain.frame.height + FolderPanel.headerHeight)
-        #expect(FolderPanel.header(for: [URL(fileURLWithPath: "/tmp/a.txt"), URL(fileURLWithPath: "/tmp/b.txt")])
-                == "Open 2 items with…")
+        #expect(withFiles.frame.width > plain.frame.width) // one-app grid widened for the title
+        #expect(withFiles.frame.width <= FolderPanel.maxHeaderWidth)
+        #expect(FolderPanel.header(for: files) == "Open 2 items with…")
+        #expect(FolderPanel.header(for: [files[0]]) == "Open “Quarterly Report.pdf” with…")
+    }
+
+    @Test func handlersAreQueriedOncePerFileType() {
+        let files = ["a.jpg", "b.jpg", "c.jpg", "d.txt"].map { URL(fileURLWithPath: "/tmp/\($0)") }
+        var queries = 0
+        let preview = URL(fileURLWithPath: "/System/Applications/Preview.app")
+        let result = FolderPanel.appsAbleToOpen(files, type: { UTType(filenameExtension: $0.pathExtension)! }) { _ in
+            queries += 1
+            return [preview]
+        }
+        #expect(queries == 2)
+        #expect(result == [preview.path])
+        #expect(FolderPanel.appsAbleToOpen([], handlers: { _ in [] }) == nil)
+        let many = (0..<(FolderPanel.maxTypesToCheck + 1)).map { URL(fileURLWithPath: "/tmp/f.ext\($0)") }
+        #expect(FolderPanel.appsAbleToOpen(many, type: { UTType(filenameExtension: $0.pathExtension) ?? .item },
+                                           handlers: { _ in [] }) == nil)
+    }
+
+    @Test func appsThatCantOpenDroppedFilesAreDimmed() throws {
+        let calculator = URL(fileURLWithPath: "/System/Applications/Calculator.app")
+        let textEdit = URL(fileURLWithPath: "/System/Applications/TextEdit.app")
+        try #require(FileManager.default.fileExists(atPath: calculator.path))
+        try #require(FileManager.default.fileExists(atPath: textEdit.path))
+        let panel = FolderPanel(apps: [calculator, textEdit], files: [URL(fileURLWithPath: "/tmp/a.txt")],
+                                handlers: { _ in [textEdit] }) { _ in }
+        let alphas = panel.contentView!.subviews.map(\.alphaValue)
+        #expect(alphas.filter { $0 == FolderPanel.dimmedAlpha }.count == 1) // Calculator
     }
 
     @Test func emptyListFolderFallsBackToGridEmptyState() {

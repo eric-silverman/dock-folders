@@ -38,7 +38,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             MainActor.assumeIsolated { NSApp.terminate(nil) }
         }
         activationObserver = NSWorkspace.shared.notificationCenter.addObserver(
-            forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { _ in
+            forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { note in
+            // Ignore our own activation (opening files can activate us); any other app means the user moved on.
+            let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+            guard app?.processIdentifier != ProcessInfo.processInfo.processIdentifier else { return }
             MainActor.assumeIsolated { NSApp.terminate(nil) }
         }
     }
