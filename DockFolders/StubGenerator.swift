@@ -10,6 +10,26 @@ enum StubGenerator {
     }
 
     static let directory = FileManager.default.homeDirectoryForCurrentUser.appending(path: "Applications/DockFolders")
+    static let templateName = "DockFolders Folder"
+    static var bundledTemplate: URL? { Bundle.main.url(forResource: templateName, withExtension: "app") }
+
+    /// Identifies a template build (its executable and Info.plist), recorded in each folder app it makes.
+    static func fingerprint(of template: URL) -> String {
+        var hash = SHA256()
+        for part in ["Contents/Info.plist", "Contents/MacOS/" + (Bundle(url: template)?.executableURL?.lastPathComponent ?? "")] {
+            hash.update(data: (try? Data(contentsOf: template.appending(path: part))) ?? Data())
+        }
+        return hash.finalize().map { String(format: "%02x", $0) }.joined()
+    }
+
+    /// The fingerprint a folder's app was built from: nil if it hasn't been built, "" if built before fingerprints.
+    static func builtFingerprint(of folder: Folder) -> String? {
+        let info = url(for: folder.name).appending(path: "Contents/Info.plist")
+        guard let data = try? Data(contentsOf: info),
+              let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
+        else { return nil }
+        return plist[StubInfo.templateKey] as? String ?? ""
+    }
 
     static func fileName(for name: String) -> String {
         // NFC so "Café" typed and pasted map to the same file (APFS treats them as one name).
@@ -22,9 +42,6 @@ enum StubGenerator {
     static func url(for name: String) -> URL {
         directory.appending(path: fileName(for: name) + ".app", directoryHint: .isDirectory)
     }
-
-    /// Stages a full copy next to the destination, then swaps it in, so the Dock never sees a half-built app.
-    static let templateName = "DockFolders Folder"
 
     /// The certificate to sign folder apps with: the one that signed `app` (default: DockFolders itself), as its
     /// SHA-1 for `codesign -s`, or "-" (ad hoc) if unsigned. macOS won't load the Dock menu plug-in from an
@@ -46,7 +63,8 @@ enum StubGenerator {
         return Insecure.SHA1.hash(data: SecCertificateCopyData(leaf) as Data).map { String(format: "%02X", $0) }.joined()
     }
 
-    static func generate(_ folder: Folder, template: URL? = Bundle.main.url(forResource: templateName, withExtension: "app"),
+    /// Stages a full copy next to the destination, then swaps it in, so the Dock never sees a half-built app.
+    static func generate(_ folder: Folder, template: URL? = bundledTemplate,
                          identity: String = signingIdentity()) throws {
         guard let template else {
             throw Failure(errorDescription: "\(templateName).app is missing from the DockFolders bundle.")
@@ -63,7 +81,8 @@ enum StubGenerator {
         let info = staged.appending(path: "Contents/Info.plist")
         let plist = try PropertyListSerialization.propertyList(from: Data(contentsOf: info), format: nil) as? [String: Any] ?? [:]
         let managerID = Bundle.main.bundleIdentifier ?? "com.esilverman.DockFolders"
-        try PropertyListSerialization.data(fromPropertyList: StubInfo.rewrite(plist, folder: folder, managerBundleID: managerID),
+        try PropertyListSerialization.data(fromPropertyList: StubInfo.rewrite(plist, folder: folder, managerBundleID: managerID,
+                                                                           templateFingerprint: fingerprint(of: template)),
                                            format: .xml, options: 0).write(to: info)
 
         let resources = staged.appending(path: "Contents/Resources")
@@ -72,7 +91,13 @@ enum StubGenerator {
 
         // A downloaded DockFolders.app would pass its quarantine flag on to every folder app.
         try run("/usr/bin/xattr", "-dr", "com.apple.quarantine", staged.path)
-        try run("/usr/bin/codesign", "--force", "--deep", "--timestamp=none", "-s", identity, staged.path)
+        do {
+            try run("/usr/bin/codesign", "--force", "--deep", "--timestamp=none", "-s", identity, staged.path)
+        } catch where identity != "-" {
+            // E.g. this Mac doesn't have the certificate's private key: everything but the Dock menu still works.
+            requestLog.error("codesign with \(identity, privacy: .public) failed, signing ad hoc: \(error.localizedDescription, privacy: .public)")
+            try run("/usr/bin/codesign", "--force", "--deep", "--timestamp=none", "-s", "-", staged.path)
+        }
 
         if fm.fileExists(atPath: dest.path) {
             _ = try fm.replaceItemAt(dest, withItemAt: staged)

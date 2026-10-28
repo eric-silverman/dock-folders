@@ -50,22 +50,17 @@ struct DroppedAppsTests {
         #expect(folder.appPaths == ["/Applications/A.app", "/Applications/B.app"])
     }
 
-    @Test func storeUpdateChangesOneFolder() throws {
-        let url = FileManager.default.temporaryDirectory.appending(path: "DockFoldersTests-\(UUID())/folders.json")
-        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
-        let a = Folder(id: UUID(), name: "A", appPaths: []), b = Folder(id: UUID(), name: "B", appPaths: [])
-        try FolderStore.save([a, b], to: url)
-        #expect(try FolderStore.update(b.id, at: url) { $0.addApps([URL(fileURLWithPath: "/Applications/X.app")]) })
-        #expect(try FolderStore.load(from: url).map(\.appPaths) == [[], ["/Applications/X.app"]])
-        #expect(try FolderStore.update(UUID(), at: url) { _ in } == false)
-    }
-
     @Test func requestArgumentsRoundTrip() {
         let id = UUID()
-        let args = ["DockFolders", StubInfo.backgroundArgument, ManagerRequest.rebuild.argument, id.uuidString]
-        #expect(ManagerRequest.rebuild.folderID(in: args) == id)
-        #expect(ManagerRequest.edit.folderID(in: args) == nil)
-        #expect(ManagerRequest.edit.folderID(in: ["DockFolders", "--edit"]) == nil)
+        let args = ["DockFolders", StubInfo.backgroundArgument, ManagerRequest.add.argument, id.uuidString,
+                    "/Applications/A.app", "/Applications/B.app"]
+        #expect(ManagerRequest.add.parse(args)?.id == id)
+        #expect(ManagerRequest.add.parse(args)?.paths == ["/Applications/A.app", "/Applications/B.app"])
+        #expect(ManagerRequest.edit.parse(args) == nil)
+        #expect(ManagerRequest.edit.parse(["DockFolders", "--edit", id.uuidString])?.paths == [])
+        #expect(ManagerRequest.add.parse(["DockFolders", "--add"]) == nil)
+        #expect(ManagerRequest.add.parse(["DockFolders", "--add", "not-a-uuid"]) == nil)
+        #expect(ManagerRequest.add.parse(["--add", id.uuidString, "/A.app", "--edit", "x"])?.paths == ["/A.app"])
         #expect(ManagerRequest.edit.notificationName(managerBundleID: "m").rawValue == "m.edit")
     }
 
@@ -73,6 +68,8 @@ struct DroppedAppsTests {
         #expect(StubInfo.managerBundleID(fromStubID: "com.esilverman.DockFolders.folder.11111111-2222-3333-4444-555555555555")
                 == "com.esilverman.DockFolders")
         #expect(StubInfo.managerBundleID(fromStubID: "com.esilverman.DockFolders.FolderStub") == nil)
+        #expect(StubInfo.managerBundleID(fromStubID: ".folder.x") == nil)
+        #expect(StubInfo.managerBundleID(fromStubID: "a.folder.b.folder.x") == "a.folder.b")
     }
 }
 
@@ -87,7 +84,9 @@ struct StubInfoTests {
             "LSUIElement": true,
             "DockFolderID": "",
         ]
-        let p = StubInfo.rewrite(template, folder: folder, managerBundleID: "com.esilverman.DockFolders")
+        let p = StubInfo.rewrite(template, folder: folder, managerBundleID: "com.esilverman.DockFolders",
+                                 templateFingerprint: "abc")
+        #expect(p[StubInfo.templateKey] as? String == "abc")
         #expect(p["CFBundleIdentifier"] as? String == "com.esilverman.DockFolders.folder.11111111-2222-3333-4444-555555555555")
         #expect(p["CFBundleName"] as? String == "Dev Tools")
         #expect(p["CFBundleDisplayName"] as? String == "Dev Tools")
@@ -247,6 +246,16 @@ struct StubGeneratorTests {
         let id = StubGenerator.signingIdentity()
         #expect(id == "-" || (id.count == 40 && id.allSatisfy(\.isHexDigit)))
         #expect(StubGenerator.signingIdentity(of: URL(fileURLWithPath: "/nonexistent.app")) == "-")
+        // The certificate branch, independent of how the tests were signed: an Apple-signed app.
+        let apple = StubGenerator.signingIdentity(of: URL(fileURLWithPath: "/System/Applications/Calculator.app"))
+        #expect(apple.count == 40 && apple.allSatisfy(\.isHexDigit))
+    }
+
+    @Test func templateFingerprintIsStable() {
+        let app = URL(fileURLWithPath: "/System/Applications/Calculator.app")
+        let a = StubGenerator.fingerprint(of: app)
+        #expect(a.count == 64 && a == StubGenerator.fingerprint(of: app))
+        #expect(a != StubGenerator.fingerprint(of: URL(fileURLWithPath: "/System/Applications/TextEdit.app")))
     }
 
     @Test func icnsContainerIsWellFormed() {

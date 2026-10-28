@@ -39,31 +39,54 @@ final class FolderModel {
                 forName: request.notificationName(managerBundleID: managerID), object: nil, queue: .main
             ) { [weak self] note in
                 let id = (note.object as? String).flatMap(UUID.init(uuidString:))
-                MainActor.assumeIsolated { if let id { self?.handle(request, for: id) } }
+                let paths = note.userInfo?[ManagerRequest.pathsKey] as? [String] ?? []
+                MainActor.assumeIsolated { if let id { self?.handle(request, for: id, paths: paths) } }
             })
-            if let id = request.folderID(in: CommandLine.arguments) { handle(request, for: id) }
+            if let (id, paths) = request.parse(CommandLine.arguments) { handle(request, for: id, paths: paths) }
         }
+        rebuildOutdatedFolderApps()
     }
 
-    private func handle(_ request: ManagerRequest, for id: UUID) {
+    private func handle(_ request: ManagerRequest, for id: UUID, paths: [String]) {
         requestLog.notice("manager received \(request.rawValue, privacy: .public) for \(id.uuidString, privacy: .public)")
         switch request {
-        case .rebuild: folderChangedOnDisk(id)
+        case .add: addDroppedApps(paths, to: id)
         case .edit:
-            if folder(id) == nil, let fresh = try? FolderStore.load() { folders = fresh }
             selection = id
             windowRequests += 1
         }
     }
 
-    /// A folder app added apps to folders.json: reload, rebuild its icon, and restart the Dock so it shows.
-    func folderChangedOnDisk(_ id: UUID) {
-        if let fresh = try? FolderStore.load() { folders = fresh }
-        let build = scheduleBuild(id, after: .zero)
+    /// Apps dropped on a folder's Dock tile. Paths that aren't apps on disk, or are already in the folder, are
+    /// ignored, so a stray or repeated request changes nothing and never restarts the Dock.
+    private func addDroppedApps(_ paths: [String], to id: UUID) {
+        let urls = paths.map { URL(fileURLWithPath: $0) }.filter { FileManager.default.fileExists(atPath: $0.path) }
+        guard let i = index(id), !folders[i].addApps(urls).isEmpty else { return }
+        save()
+        restartDockAfterBuilding([id])
+    }
+
+    /// Folder apps built from an older template (or signed differently) miss newer features such as the Dock
+    /// menu: rebuild them once, e.g. after DockFolders itself was updated.
+    private func rebuildOutdatedFolderApps() {
+        guard let template = StubGenerator.bundledTemplate else { return }
+        let current = StubGenerator.fingerprint(of: template)
+        let outdated = folders.filter { StubGenerator.builtFingerprint(of: $0).map { $0 != current } ?? false }
+        guard !outdated.isEmpty else { return }
+        requestLog.notice("rebuilding \(outdated.count) outdated folder apps")
+        restartDockAfterBuilding(outdated.map(\.id))
+    }
+
+    /// Builds the folders now, then restarts the Dock once if any of them is in it (it caches icons).
+    private func restartDockAfterBuilding(_ ids: [UUID]) {
+        let builds = ids.map { scheduleBuild($0, after: .zero) }
         Task {
-            guard await build.value, let folder = folder(id) else { return }
+            var dockShowsOne = false
+            for (id, build) in zip(ids, builds) {
+                if await build.value, let folder = folder(id), isInDock(folder) { dockShowsOne = true }
+            }
             reloadDockState()
-            if isInDock(folder) { refreshDock() }
+            if dockShowsOne { refreshDock() }
         }
     }
 

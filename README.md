@@ -25,9 +25,11 @@ The Xcode project is generated from `project.yml`. After adding/removing files, 
 4. Optional: choose **Grid** or **List** for how the folder opens, and a color for its Dock icon.
 5. Click **Add to Dock**. After you confirm, the Dock restarts with the folder on the right side, next to Downloads, so folders stay apart from the running apps on the left. (Folders added to the left side by earlier versions keep working.)
 
-Drop files on a folder in the Dock to open them: the folder shows "Open … with", dims apps that can't open them, and clicking an app opens the files in it. A dot marks apps in the folder that are already running; clicking one brings it to the front. App-list changes take effect the next time you open the folder. Changing a folder's first 9 apps rebuilds its icon. The Dock caches icons, so click **Refresh Dock** in the toolbar when it appears. Renaming a folder that's in the Dock restarts the Dock automatically; otherwise its tile would break.
+Drop apps on a folder in the Dock to add them to it (DockFolders saves them, rebuilds the icon, and refreshes the Dock; it starts in the background if it isn't running). Right-click a folder in the Dock and choose **Edit “Name”…** to open it in DockFolders. Drop other files on a folder to open them: the folder shows "Open … with", dims apps that can't open them, and clicking an app opens the files in it. A dot marks apps in the folder that are already running; clicking one brings it to the front. App-list changes take effect the next time you open the folder. Changing a folder's first 9 apps rebuilds its icon. The Dock caches icons, so click **Refresh Dock** in the toolbar when it appears. Renaming a folder that's in the Dock restarts the Dock automatically; otherwise its tile would break.
 
 **Delete Folder** moves the folder app to the Trash and takes it out of the Dock. The apps inside it aren't touched.
+
+When DockFolders starts, it rebuilds any folder app made by an older version (each records the template it came from), so updates reach existing folders; the Dock restarts once if any of them is in it.
 
 ## Files
 

@@ -3,9 +3,7 @@ import AppKit
 @main
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    static var folderID: UUID? {
-        (Bundle.main.object(forInfoDictionaryKey: StubInfo.folderIDKey) as? String).flatMap(UUID.init(uuidString:))
-    }
+    static var folderID: UUID? { Bundle.main.dockFolderID }
 
     /// This folder: DockFolderID from our Info.plist, contents from folders.json.
     static func loadFolder() -> Folder? {
@@ -19,6 +17,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Files dropped on the folder's Dock tile; picking an app opens them in it.
     private var droppedFiles: [URL] = []
     private var notice: String?
+    /// Apps just dropped on us; shown right away, before the manager has saved them.
+    private var pendingAdds: [String] = []
     private var didLaunch = false
 
     static func main() {
@@ -45,13 +45,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if didLaunch { showPanel() } // dropped while the folder was already open: show it again
     }
 
-    /// Adds the apps to this folder in folders.json; nil if the folder can't be found or saved.
+    /// Asks the manager (the only writer of folders.json) to add the apps; returns the ones that are new.
+    /// nil if this folder can't be found, so the drop falls back to "Open … with".
     private func addToFolder(_ apps: [URL]) -> [String]? {
-        guard let id = Self.folderID else { return nil }
-        var added: [String] = []
-        guard (try? FolderStore.update(id) { added = $0.addApps(apps) }) == true else { return nil }
-        // The manager owns icon rendering: ask it to rebuild this folder app (and refresh the Dock).
-        if !added.isEmpty { ManagerRequest.rebuild.send(folderID: id, folderAppBundleID: Bundle.main.bundleIdentifier ?? "") }
+        guard let id = Self.folderID, var folder = Self.loadFolder() else {
+            requestLog.error("drop: folder not found in folders.json; offering Open With instead")
+            return nil
+        }
+        let added = folder.addApps(apps)
+        if !added.isEmpty {
+            ManagerRequest.add.send(folderID: id, paths: added, folderAppBundleID: Bundle.main.bundleIdentifier ?? "")
+        }
+        pendingAdds = added
         return added
     }
 
@@ -75,7 +80,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func showPanel() {
         panel?.orderOut(nil)
         let folder = Self.loadFolder()
-        let apps = (folder?.appPaths ?? []).map { URL(fileURLWithPath: $0) }
+        var paths = folder?.appPaths ?? []
+        for path in pendingAdds where !paths.contains(path) { paths.append(path) }
+        let apps = paths.map { URL(fileURLWithPath: $0) }
         let panel = FolderPanel(apps: apps, layout: folder?.layout ?? .grid, files: droppedFiles,
                                 notice: notice) { [weak self] url in
             self?.launch(url)

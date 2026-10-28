@@ -14,11 +14,12 @@ final class DockMenuPlugIn: NSObject, NSDockTilePlugIn {
 
     /// Built once and kept: the Dock shows a copy of this menu and routes the click back to the original item,
     /// so a menu that was freed after being returned never receives it.
-    private lazy var menu: NSMenu = {
-        let name = folderApp?.object(forInfoDictionaryKey: "CFBundleName") as? String
-        let item = NSMenuItem(title: name.map { "Edit “\($0)”…" } ?? "Edit Folder…",
-                              action: #selector(editFolder), keyEquivalent: "")
+    private lazy var item: NSMenuItem = {
+        let item = NSMenuItem(title: "", action: #selector(editFolder), keyEquivalent: "")
         item.target = self
+        return item
+    }()
+    private lazy var menu: NSMenu = {
         let menu = NSMenu()
         menu.addItem(item)
         return menu
@@ -26,14 +27,14 @@ final class DockMenuPlugIn: NSObject, NSDockTilePlugIn {
 
     func dockMenu() -> NSMenu? {
         requestLog.notice("Dock menu requested for \(self.folderApp?.bundlePath ?? "nil", privacy: .public)")
+        let name = folderApp?.object(forInfoDictionaryKey: "CFBundleName") as? String
+        item.title = name.map { "Edit “\($0)”…" } ?? "Edit Folder…" // current name, even if renamed since loading
         return menu
     }
 
     @objc private func editFolder() {
         requestLog.notice("Dock menu: Edit chosen, folder app \(self.folderApp?.bundlePath ?? "nil", privacy: .public)")
-        guard let app = folderApp, let appID = app.bundleIdentifier,
-              let id = (app.object(forInfoDictionaryKey: StubInfo.folderIDKey) as? String).flatMap(UUID.init(uuidString:))
-        else { return }
+        guard let app = folderApp, let appID = app.bundleIdentifier, let id = app.dockFolderID else { return }
         ManagerRequest.edit.send(folderID: id, folderAppBundleID: appID)
     }
 }
