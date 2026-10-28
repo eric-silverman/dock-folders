@@ -3,17 +3,13 @@ import AppKit
 @main
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    // Step 1: hardcoded. Step 2 reads DockFolderID from Info.plist and the list from folders.json.
-    static let apps = [
-        "/Applications/Safari.app",
-        "/System/Applications/Calculator.app",
-        "/System/Applications/Calendar.app",
-        "/System/Applications/Notes.app",
-        "/System/Applications/Reminders.app",
-        "/System/Applications/Utilities/Terminal.app",
-        "/System/Applications/Utilities/Activity Monitor.app",
-        "/Applications/Missing Example.app",
-    ].map { URL(fileURLWithPath: $0) }
+    /// This folder's apps: DockFolderID from our Info.plist, contents from folders.json.
+    static func loadApps() -> [URL] {
+        guard let idString = Bundle.main.object(forInfoDictionaryKey: StubInfo.folderIDKey) as? String,
+              let id = UUID(uuidString: idString),
+              let folder = (try? FolderStore.load())?.first(where: { $0.id == id }) else { return [] }
+        return folder.appPaths.map { URL(fileURLWithPath: $0) }
+    }
 
     private var panel: FolderPanel?
     private var clickMonitor: Any?
@@ -26,7 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let panel = FolderPanel(apps: Self.apps) { [weak self] url in self?.launch(url) }
+        let panel = FolderPanel(apps: Self.loadApps()) { [weak self] url in self?.launch(url) }
         panel.place(near: NSEvent.mouseLocation)
         NSApp.activate()
         panel.makeKeyAndOrderFront(nil)

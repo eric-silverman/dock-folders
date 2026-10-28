@@ -75,7 +75,7 @@ private final class AppItemView: NSView {
         layer?.cornerRadius = 8
 
         let icon = NSImageView(frame: NSRect(x: (frame.width - 64) / 2, y: 26, width: 64, height: 64))
-        icon.image = NSWorkspace.shared.icon(forFile: url.path)
+        icon.image = appIcon(forPath: url.path)
         icon.imageScaling = .scaleProportionallyUpOrDown
         addSubview(icon)
 

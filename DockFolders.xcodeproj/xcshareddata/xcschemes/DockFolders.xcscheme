@@ -15,9 +15,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "4DFBC3B0C2035A164982B175"
-               BuildableName = "FolderStub.app"
-               BlueprintName = "FolderStub"
+               BlueprintIdentifier = "539917B7243C69605B777169"
+               BuildableName = "DockFolders.app"
+               BlueprintName = "DockFolders"
                ReferencedContainer = "container:DockFolders.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -32,9 +32,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4DFBC3B0C2035A164982B175"
-            BuildableName = "FolderStub.app"
-            BlueprintName = "FolderStub"
+            BlueprintIdentifier = "539917B7243C69605B777169"
+            BuildableName = "DockFolders.app"
+            BlueprintName = "DockFolders"
             ReferencedContainer = "container:DockFolders.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -68,9 +68,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4DFBC3B0C2035A164982B175"
-            BuildableName = "FolderStub.app"
-            BlueprintName = "FolderStub"
+            BlueprintIdentifier = "539917B7243C69605B777169"
+            BuildableName = "DockFolders.app"
+            BlueprintName = "DockFolders"
             ReferencedContainer = "container:DockFolders.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -87,9 +87,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4DFBC3B0C2035A164982B175"
-            BuildableName = "FolderStub.app"
-            BlueprintName = "FolderStub"
+            BlueprintIdentifier = "539917B7243C69605B777169"
+            BuildableName = "DockFolders.app"
+            BlueprintName = "DockFolders"
             ReferencedContainer = "container:DockFolders.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
