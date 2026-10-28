@@ -1,0 +1,35 @@
+name: DockFolders
+options:
+  bundleIdPrefix: com.esilverman
+  deploymentTarget:
+    macOS: "15.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: ""
+targets:
+  FolderStub:
+    type: application
+    platform: macOS
+    sources: [FolderStub, Shared]
+    info:
+      path: FolderStub/Info.plist
+      properties:
+        LSUIElement: true
+        CFBundleName: Folder
+        DockFolderID: ""
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.esilverman.DockFolders.FolderStub
+    scheme:
+      testTargets: [DockFoldersTests]
+  DockFoldersTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [Tests, Shared]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.esilverman.DockFolders.Tests
+        GENERATE_INFOPLIST_FILE: YES

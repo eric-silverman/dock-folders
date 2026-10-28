@@ -1,0 +1,25 @@
+# macOS
+.DS_Store
+
+# Dropbox
+*conflicted copy*
+.dropbox
+.dropbox.attr
+
+# Xcode build output
+build/
+DerivedData/
+*.xcarchive
+*.ipa
+*.dSYM
+*.dSYM.zip
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+
+# Swift Package Manager
+.build/
+.swiftpm/
