@@ -25,7 +25,7 @@ The Xcode project is generated from `project.yml`. After adding/removing files, 
 4. Optional: choose **Grid** or **List** for how the folder opens, and a color for its Dock icon.
 5. Click **Add to Dock**. After you confirm, the Dock restarts with the folder at the end of the apps side. To place it yourself, choose **Show in Finder Instead** and drag it into the Dock.
 
-App-list changes take effect the next time you open the folder. Changing a folder's first 9 apps rebuilds its icon. The Dock caches icons, so click **Refresh Dock** in the toolbar when it appears. Renaming a folder that's in the Dock restarts the Dock automatically; otherwise its tile would break.
+A dot marks apps in the folder that are already running; clicking one brings it to the front. App-list changes take effect the next time you open the folder. Changing a folder's first 9 apps rebuilds its icon. The Dock caches icons, so click **Refresh Dock** in the toolbar when it appears. Renaming a folder that's in the Dock restarts the Dock automatically; otherwise its tile would break.
 
 **Delete Folder** moves the folder app to the Trash and takes it out of the Dock. The apps inside it aren't touched.
 

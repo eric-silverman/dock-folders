@@ -14,11 +14,24 @@ final class FolderPanel: NSPanel {
 
     private var scrollObserver: Any?
 
+    /// Canonical path for comparing an app in the folder with a running app (e.g. /Applications/Safari.app
+    /// is a symlink into the system cryptex).
+    static func canonicalPath(_ url: URL) -> String {
+        url.resolvingSymlinksInPath().standardizedFileURL.path
+    }
+
+    static func runningAppPaths(_ bundleURLs: [URL?]) -> Set<String> {
+        Set(bundleURLs.compactMap { $0.map(canonicalPath) })
+    }
+
     init(apps: [URL], layout: FolderLayout = .grid, onPick: @escaping (URL) -> Void) {
         let n = max(apps.count, 1)
         let cols = min(Self.maxColumns, Int(Double(n).squareRoot().rounded(.up)))
         let rows = (n + cols - 1) / cols
         let list = layout == .list && !apps.isEmpty
+        // Regular apps only (what the Dock shows); skips ~100 helpers and agents on the open path.
+        let running = Self.runningAppPaths(NSWorkspace.shared.runningApplications
+            .filter { $0.activationPolicy == .regular }.map(\.bundleURL))
         let listHeight = CGFloat(apps.count) * Self.row.height
         let size = list
             ? NSSize(width: Self.row.width + 2 * Self.listPadding,
@@ -64,7 +77,8 @@ final class FolderPanel: NSPanel {
             let listView = FlippedView(frame: NSRect(x: 0, y: 0, width: width, height: listHeight))
             for (i, url) in apps.enumerated() {
                 let frame = NSRect(x: 0, y: CGFloat(i) * Self.row.height, width: width, height: Self.row.height)
-                listView.addSubview(AppItemView(url: url, frame: frame, style: .row, onPick: onPick))
+                listView.addSubview(AppItemView(url: url, frame: frame, style: .row,
+                                                running: running.contains(Self.canonicalPath(url)), onPick: onPick))
             }
             scroll.documentView = listView
             effect.addSubview(scroll)
@@ -82,7 +96,8 @@ final class FolderPanel: NSPanel {
             let row = i / cols, col = i % cols
             let origin = NSPoint(x: Self.padding + CGFloat(col) * Self.cell.width,
                                  y: Self.padding + CGFloat(rows - 1 - row) * Self.cell.height)
-            effect.addSubview(AppItemView(url: url, frame: NSRect(origin: origin, size: Self.cell), style: .tile, onPick: onPick))
+            effect.addSubview(AppItemView(url: url, frame: NSRect(origin: origin, size: Self.cell), style: .tile,
+                                          running: running.contains(Self.canonicalPath(url)), onPick: onPick))
         }
     }
 
@@ -131,7 +146,7 @@ private final class AppItemView: NSView {
     private let available: Bool
     private let onPick: (URL) -> Void
 
-    init(url: URL, frame: NSRect, style: Style, onPick: @escaping (URL) -> Void) {
+    init(url: URL, frame: NSRect, style: Style, running: Bool, onPick: @escaping (URL) -> Void) {
         self.url = url
         self.onPick = onPick
         available = FileManager.default.fileExists(atPath: url.path)
@@ -165,6 +180,21 @@ private final class AppItemView: NSView {
             label.frame = NSRect(x: labelX, y: (frame.height - label.frame.height) / 2,
                                  width: frame.width - labelX - inset, height: label.frame.height)
         }
+
+        // Running indicator, like the Dock's: under the icon in the grid, left of it in the list.
+        if running {
+            let size: CGFloat = 4
+            let dot = NSView(frame: style == .tile
+                ? NSRect(x: (frame.width - size) / 2, y: icon.frame.minY - size, width: size, height: size)
+                : NSRect(x: 1, y: (frame.height - size) / 2, width: size, height: size))
+            dot.wantsLayer = true
+            dot.layer?.backgroundColor = NSColor.labelColor.withAlphaComponent(0.7).cgColor
+            dot.layer?.cornerRadius = size / 2
+            addSubview(dot)
+        }
+        setAccessibilityElement(true)
+        setAccessibilityRole(.button)
+        setAccessibilityLabel(running ? "\(name), running" : name)
 
         if !available {
             alphaValue = 0.35

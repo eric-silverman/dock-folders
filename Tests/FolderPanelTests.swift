@@ -12,6 +12,19 @@ struct FolderPanelTests {
         #expect(panel.canBecomeKey) // Escape still reaches it
     }
 
+    @Test func runningAppsMatchThroughSymlinks() throws {
+        let dir = FileManager.default.temporaryDirectory.appending(path: "DockFoldersTests-\(UUID())")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let real = dir.appending(path: "Real/Tool.app"), link = dir.appending(path: "Tool.app")
+        try FileManager.default.createDirectory(at: real, withIntermediateDirectories: true)
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: real)
+
+        // A folder lists the symlink; the running app reports its real (resolved) bundle URL.
+        let running = FolderPanel.runningAppPaths([real, nil])
+        #expect(running.contains(FolderPanel.canonicalPath(link)))
+        #expect(!running.contains(FolderPanel.canonicalPath(dir.appending(path: "Other.app"))))
+    }
+
     @Test func emptyListFolderFallsBackToGridEmptyState() {
         let p = FolderPanel(apps: [], layout: .list) { _ in }
         #expect(p.frame.size == NSSize(width: FolderPanel.cell.width + 2 * FolderPanel.padding,
