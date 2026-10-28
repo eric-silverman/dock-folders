@@ -265,19 +265,19 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					4DFBC3B0C2035A164982B175 = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = JXP2S296CC;
 						ProvisioningStyle = Manual;
 					};
 					539917B7243C69605B777169 = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = JXP2S296CC;
 						ProvisioningStyle = Manual;
 					};
 					5EC81DE6BEE514D2C3D45048 = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = JXP2S296CC;
 						ProvisioningStyle = Manual;
 					};
 					DD14E63F8F545BA1448A4719 = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = JXP2S296CC;
 						ProvisioningStyle = Manual;
 					};
 				};
@@ -403,6 +403,7 @@
 					"@executable_path/../Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.esilverman.DockFolders.FolderStub;
+				PRODUCT_NAME = "DockFolders Folder";
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -418,6 +419,7 @@
 					"@executable_path/../Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.esilverman.DockFolders.FolderStub;
+				PRODUCT_NAME = "DockFolders Folder";
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -486,11 +488,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = JXP2S296CC;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -511,6 +513,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CODE_SIGN_FLAGS = "--timestamp=none";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -597,11 +600,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = JXP2S296CC;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -615,6 +618,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				OTHER_CODE_SIGN_FLAGS = "--timestamp=none";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;

@@ -243,6 +243,12 @@ struct StubGeneratorTests {
         #expect(FolderIcon.icns(appPaths: [], color: .red) != FolderIcon.icns(appPaths: [], color: .blue))
     }
 
+    @Test func signingIdentityIsAdHocOrCertificateHash() {
+        let id = StubGenerator.signingIdentity()
+        #expect(id == "-" || (id.count == 40 && id.allSatisfy(\.isHexDigit)))
+        #expect(StubGenerator.signingIdentity(of: URL(fileURLWithPath: "/nonexistent.app")) == "-")
+    }
+
     @Test func icnsContainerIsWellFormed() {
         let data = FolderIcon.icns(appPaths: [])
         #expect(data.prefix(4) == Data("icns".utf8))

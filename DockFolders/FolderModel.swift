@@ -46,6 +46,7 @@ final class FolderModel {
     }
 
     private func handle(_ request: ManagerRequest, for id: UUID) {
+        requestLog.notice("manager received \(request.rawValue, privacy: .public) for \(id.uuidString, privacy: .public)")
         switch request {
         case .rebuild: folderChangedOnDisk(id)
         case .edit:

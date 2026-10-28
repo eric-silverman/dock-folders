@@ -1,5 +1,7 @@
 import AppKit
 import CoreServices
+import CryptoKit
+import Security
 
 /// Builds `~/Applications/DockFolders/<Name>.app` from the FolderStub template in our Resources.
 enum StubGenerator {
@@ -22,9 +24,32 @@ enum StubGenerator {
     }
 
     /// Stages a full copy next to the destination, then swaps it in, so the Dock never sees a half-built app.
-    static func generate(_ folder: Folder, template: URL? = Bundle.main.url(forResource: "FolderStub", withExtension: "app")) throws {
+    static let templateName = "DockFolders Folder"
+
+    /// The certificate to sign folder apps with: the one that signed `app` (default: DockFolders itself), as its
+    /// SHA-1 for `codesign -s`, or "-" (ad hoc) if unsigned. macOS won't load the Dock menu plug-in from an
+    /// ad-hoc signed folder app, so folder apps follow whatever identity DockFolders was built with.
+    static func signingIdentity(of app: URL? = nil) -> String {
+        var code: SecStaticCode?
+        if let app {
+            SecStaticCodeCreateWithPath(app as CFURL, [], &code)
+        } else {
+            var running: SecCode?
+            SecCodeCopySelf([], &running)
+            if let running { SecCodeCopyStaticCode(running, [], &code) }
+        }
+        var info: CFDictionary?
+        guard let code, SecCodeCopySigningInformation(code, SecCSFlags(rawValue: kSecCSSigningInformation), &info) == errSecSuccess,
+              let certs = (info as? [String: Any])?[kSecCodeInfoCertificates as String] as? [SecCertificate],
+              let leaf = certs.first
+        else { return "-" }
+        return Insecure.SHA1.hash(data: SecCertificateCopyData(leaf) as Data).map { String(format: "%02X", $0) }.joined()
+    }
+
+    static func generate(_ folder: Folder, template: URL? = Bundle.main.url(forResource: templateName, withExtension: "app"),
+                         identity: String = signingIdentity()) throws {
         guard let template else {
-            throw Failure(errorDescription: "FolderStub.app is missing from the DockFolders bundle.")
+            throw Failure(errorDescription: "\(templateName).app is missing from the DockFolders bundle.")
         }
         let fm = FileManager.default
         let dest = url(for: folder.name)
@@ -47,7 +72,7 @@ enum StubGenerator {
 
         // A downloaded DockFolders.app would pass its quarantine flag on to every folder app.
         try run("/usr/bin/xattr", "-dr", "com.apple.quarantine", staged.path)
-        try run("/usr/bin/codesign", "--force", "--deep", "-s", "-", staged.path)
+        try run("/usr/bin/codesign", "--force", "--deep", "--timestamp=none", "-s", identity, staged.path)
 
         if fm.fileExists(atPath: dest.path) {
             _ = try fm.replaceItemAt(dest, withItemAt: staged)

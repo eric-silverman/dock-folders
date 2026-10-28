@@ -12,7 +12,9 @@ final class DockMenuPlugIn: NSObject, NSDockTilePlugIn {
 
     func setDockTile(_ dockTile: NSDockTile?) {}
 
-    func dockMenu() -> NSMenu? {
+    /// Built once and kept: the Dock shows a copy of this menu and routes the click back to the original item,
+    /// so a menu that was freed after being returned never receives it.
+    private lazy var menu: NSMenu = {
         let name = folderApp?.object(forInfoDictionaryKey: "CFBundleName") as? String
         let item = NSMenuItem(title: name.map { "Edit “\($0)”…" } ?? "Edit Folder…",
                               action: #selector(editFolder), keyEquivalent: "")
@@ -20,9 +22,15 @@ final class DockMenuPlugIn: NSObject, NSDockTilePlugIn {
         let menu = NSMenu()
         menu.addItem(item)
         return menu
+    }()
+
+    func dockMenu() -> NSMenu? {
+        requestLog.notice("Dock menu requested for \(self.folderApp?.bundlePath ?? "nil", privacy: .public)")
+        return menu
     }
 
     @objc private func editFolder() {
+        requestLog.notice("Dock menu: Edit chosen, folder app \(self.folderApp?.bundlePath ?? "nil", privacy: .public)")
         guard let app = folderApp, let appID = app.bundleIdentifier,
               let id = (app.object(forInfoDictionaryKey: StubInfo.folderIDKey) as? String).flatMap(UUID.init(uuidString:))
         else { return }
