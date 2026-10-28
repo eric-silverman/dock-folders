@@ -7,8 +7,10 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     CODE_SIGN_STYLE: Manual
-    CODE_SIGN_IDENTITY: "-"
-    DEVELOPMENT_TEAM: ""
+    # Developer ID: macOS refuses to load an ad-hoc signed Dock tile plug-in (FolderDockMenu).
+    CODE_SIGN_IDENTITY: "Developer ID Application"
+    DEVELOPMENT_TEAM: JXP2S296CC
+    OTHER_CODE_SIGN_FLAGS: --timestamp=none
 targets:
   DockFolders:
     type: application
@@ -35,12 +37,20 @@ targets:
     type: application
     platform: macOS
     sources: [FolderStub, Shared]
+    dependencies:
+      # Gives each folder's Dock tile an "Edit Folder…" menu item while the folder app isn't running.
+      - target: FolderDockMenu
+        embed: true
+        codeSign: false
+        copy:
+          destination: plugins
     info:
       path: FolderStub/Info.plist
       properties:
         LSUIElement: true
         CFBundleName: Folder
         DockFolderID: ""
+        NSDockTilePlugIn: FolderDockMenu.docktileplugin
         # Lets the Dock accept files dropped on a folder tile. Rank None keeps folder apps out of
         # Finder's Open With menus and never makes them a default handler.
         CFBundleDocumentTypes:
@@ -51,6 +61,20 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.esilverman.DockFolders.FolderStub
+        PRODUCT_NAME: DockFolders Folder # shown in System Settings > Login Items & Extensions
+  FolderDockMenu:
+    type: bundle
+    platform: macOS
+    sources: [FolderDockMenu, Shared/Folder.swift, Shared/ManagerRequest.swift]
+    info:
+      path: FolderDockMenu/Info.plist
+      properties:
+        CFBundleExecutable: $(EXECUTABLE_NAME)
+        NSPrincipalClass: DockMenuPlugIn
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.esilverman.DockFolders.DockMenu
+        WRAPPER_EXTENSION: docktileplugin
   DockFoldersTests:
     type: bundle.unit-test
     platform: macOS

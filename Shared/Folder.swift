@@ -35,6 +35,13 @@ extension Folder {
     }
 }
 
+extension Bundle {
+    /// The folder a folder app (or the app containing a Dock plug-in) belongs to.
+    var dockFolderID: UUID? {
+        (object(forInfoDictionaryKey: StubInfo.folderIDKey) as? String).flatMap(UUID.init(uuidString:))
+    }
+}
+
 /// How the popup shows the folder's apps.
 enum FolderLayout: String, Codable, CaseIterable, Sendable {
     case grid, list
@@ -71,16 +78,6 @@ enum FolderStore {
         return try JSONDecoder().decode([Folder].self, from: Data(contentsOf: url))
     }
 
-    /// Load, change one folder, save. Returns false if there's no folder with that id.
-    @discardableResult
-    static func update(_ id: UUID, at url: URL = defaultURL, _ change: (inout Folder) -> Void) throws -> Bool {
-        var folders = try load(from: url)
-        guard let i = folders.firstIndex(where: { $0.id == id }) else { return false }
-        change(&folders[i])
-        try save(folders, to: url)
-        return true
-    }
-
     static func save(_ folders: [Folder], to url: URL = defaultURL) throws {
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         let encoder = JSONEncoder()
@@ -94,21 +91,23 @@ enum StubInfo {
     static let folderIDKey = "DockFolderID"
     static let iconName = "FolderIcon"
 
-    // A folder app that changed folders.json (apps dropped on its tile) asks the manager to rebuild it: by
-    // distributed notification if the manager is running, else by launching it with these arguments.
-    static let backgroundArgument = "--background" // launch without opening the window
-    static let rebuildArgument = "--rebuild"       // followed by the folder id
+    /// Fingerprint of the template a folder app was built from; a mismatch means it needs rebuilding.
+    static let templateKey = "DockFoldersTemplate"
+    static let folderIDInfix = ".folder."
 
-    static func folderChangedNotification(managerBundleID: String) -> String { "\(managerBundleID).folderChanged" }
+    static let backgroundArgument = "--background" // launch the manager without opening its window
 
     /// Folder apps are "<manager id>.folder.<uuid>" (see rewrite).
     static func managerBundleID(fromStubID id: String) -> String? {
-        id.range(of: ".folder.", options: .backwards).map { String(id[..<$0.lowerBound]) }
+        guard let r = id.range(of: folderIDInfix, options: .backwards), r.lowerBound > id.startIndex else { return nil }
+        return String(id[..<r.lowerBound])
     }
 
-    static func rewrite(_ plist: [String: Any], folder: Folder, managerBundleID: String) -> [String: Any] {
+    static func rewrite(_ plist: [String: Any], folder: Folder, managerBundleID: String,
+                        templateFingerprint: String) -> [String: Any] {
         var p = plist
-        p["CFBundleIdentifier"] = "\(managerBundleID).folder.\(folder.id.uuidString)"
+        p["CFBundleIdentifier"] = "\(managerBundleID)\(folderIDInfix)\(folder.id.uuidString)"
+        p[templateKey] = templateFingerprint
         p["CFBundleName"] = folder.name
         p["CFBundleDisplayName"] = folder.name
         p[folderIDKey] = folder.id.uuidString

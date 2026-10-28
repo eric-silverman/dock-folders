@@ -14,7 +14,9 @@ final class FolderModel {
     static let rebuildDelay: Duration = .milliseconds(400)
     /// Latest build per folder. Each build waits for the previous one, so two never write the same app at once.
     @ObservationIgnored private var builds: [UUID: Task<Bool, Never>] = [:]
-    @ObservationIgnored private var folderChangedObserver: Any?
+    @ObservationIgnored private var requestObservers: [Any] = []
+    /// Bumped to ask the UI to open the window (the model can't call SwiftUI's openWindow itself).
+    var windowRequests = 0
 
     init() {
         do {
@@ -29,29 +31,62 @@ final class FolderModel {
         selection = folders.first?.id
         dockPaths = DockPrefs.paths()
 
-        // Folder apps tell us when apps were dropped onto them (see StubInfo), or launch us to rebuild.
+        // Folder apps and their Dock menus send requests (see ManagerRequest): by notification while we
+        // run, or as launch arguments.
         let managerID = Bundle.main.bundleIdentifier ?? ""
-        folderChangedObserver = DistributedNotificationCenter.default().addObserver(
-            forName: .init(StubInfo.folderChangedNotification(managerBundleID: managerID)), object: nil, queue: .main
-        ) { [weak self] note in
-            let id = (note.object as? String).flatMap(UUID.init(uuidString:))
-            MainActor.assumeIsolated { if let id { self?.folderChangedOnDisk(id) } }
+        for request in ManagerRequest.allCases {
+            requestObservers.append(DistributedNotificationCenter.default().addObserver(
+                forName: request.notificationName(managerBundleID: managerID), object: nil, queue: .main
+            ) { [weak self] note in
+                let id = (note.object as? String).flatMap(UUID.init(uuidString:))
+                let paths = note.userInfo?[ManagerRequest.pathsKey] as? [String] ?? []
+                MainActor.assumeIsolated { if let id { self?.handle(request, for: id, paths: paths) } }
+            })
+            if let (id, paths) = request.parse(CommandLine.arguments) { handle(request, for: id, paths: paths) }
         }
-        let args = CommandLine.arguments
-        if let i = args.firstIndex(of: StubInfo.rebuildArgument), i + 1 < args.count,
-           let id = UUID(uuidString: args[i + 1]) {
-            folderChangedOnDisk(id)
+        rebuildOutdatedFolderApps()
+    }
+
+    private func handle(_ request: ManagerRequest, for id: UUID, paths: [String]) {
+        requestLog.notice("manager received \(request.rawValue, privacy: .public) for \(id.uuidString, privacy: .public)")
+        switch request {
+        case .add: addDroppedApps(paths, to: id)
+        case .edit:
+            selection = id
+            windowRequests += 1
         }
     }
 
-    /// A folder app added apps to folders.json: reload, rebuild its icon, and restart the Dock so it shows.
-    func folderChangedOnDisk(_ id: UUID) {
-        if let fresh = try? FolderStore.load() { folders = fresh }
-        let build = scheduleBuild(id, after: .zero)
+    /// Apps dropped on a folder's Dock tile. Paths that aren't apps on disk, or are already in the folder, are
+    /// ignored, so a stray or repeated request changes nothing and never restarts the Dock.
+    private func addDroppedApps(_ paths: [String], to id: UUID) {
+        let urls = paths.map { URL(fileURLWithPath: $0) }.filter { FileManager.default.fileExists(atPath: $0.path) }
+        guard let i = index(id), !folders[i].addApps(urls).isEmpty else { return }
+        save()
+        restartDockAfterBuilding([id])
+    }
+
+    /// Folder apps built from an older template (or signed differently) miss newer features such as the Dock
+    /// menu: rebuild them once, e.g. after DockFolders itself was updated.
+    private func rebuildOutdatedFolderApps() {
+        guard let template = StubGenerator.bundledTemplate else { return }
+        let current = StubGenerator.fingerprint(of: template)
+        let outdated = folders.filter { StubGenerator.builtFingerprint(of: $0).map { $0 != current } ?? false }
+        guard !outdated.isEmpty else { return }
+        requestLog.notice("rebuilding \(outdated.count) outdated folder apps")
+        restartDockAfterBuilding(outdated.map(\.id))
+    }
+
+    /// Builds the folders now, then restarts the Dock once if any of them is in it (it caches icons).
+    private func restartDockAfterBuilding(_ ids: [UUID]) {
+        let builds = ids.map { scheduleBuild($0, after: .zero) }
         Task {
-            guard await build.value, let folder = folder(id) else { return }
+            var dockShowsOne = false
+            for (id, build) in zip(ids, builds) {
+                if await build.value, let folder = folder(id), isInDock(folder) { dockShowsOne = true }
+            }
             reloadDockState()
-            if isInDock(folder) { refreshDock() }
+            if dockShowsOne { refreshDock() }
         }
     }
 

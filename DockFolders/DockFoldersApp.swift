@@ -13,9 +13,25 @@ struct DockFoldersApp: App {
         }
         // Launched by a folder app just to rebuild it: stay in the menu bar, no window.
         .defaultLaunchBehavior(CommandLine.arguments.contains(StubInfo.backgroundArgument) ? .suppressed : .automatic)
-        MenuBarExtra("DockFolders", systemImage: "square.grid.3x3.square") {
+        MenuBarExtra {
             MenuContent().environment(model)
+        } label: {
+            // The menu bar label is always alive, so it handles "show the window" requests from the model.
+            MenuBarLabel().environment(model)
         }
+    }
+}
+
+private struct MenuBarLabel: View {
+    @Environment(FolderModel.self) private var model
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        Image(systemName: "square.grid.3x3.square")
+            .onChange(of: model.windowRequests) {
+                openWindow(id: "main")
+                NSApp.activate()
+            }
     }
 }
 

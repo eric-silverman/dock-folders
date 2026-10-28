@@ -9,9 +9,11 @@
 /* Begin PBXBuildFile section */
 		0111F590EC87CCED91906F7C /* FolderPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EA56D836B6E327072218DC6 /* FolderPanel.swift */; };
 		0A23370BD580B3FDD43709E7 /* DockPrefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60664DEF0BCDB407B80AAF5B /* DockPrefs.swift */; };
+		0A7423AAFB70AC9599613787 /* FolderDockMenu.bundle in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 2CD118D7462E0C7FBEC9A1D5 /* FolderDockMenu.bundle */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		11FA35C9DF1469659E58706A /* DockFoldersApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 472FAB6696738CE99297BD29 /* DockFoldersApp.swift */; };
 		1669108F4BFFB751D6CFB523 /* FolderPanelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 993D1C8D5A2B79689A9DF94E /* FolderPanelTests.swift */; };
 		19402D039C2156934BA121F3 /* Folder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB94605F45B0088ACEB76B7 /* Folder.swift */; };
+		2D0A332339531E6C06FEA39B /* DockMenuPlugIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D72CDB26D8F1C83A5FFC662 /* DockMenuPlugIn.swift */; };
 		3159B07F68F767C9D73399F2 /* FolderStub.app in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 0944784E4E56E8F2E72FAB07 /* FolderStub.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		33C305E9567EF4664D4E1A41 /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CFCC9FDD03A5ACFCB26B7D1 /* AppIcon.swift */; };
 		3AA7BADC2CC4BC44F6B69551 /* Folder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB94605F45B0088ACEB76B7 /* Folder.swift */; };
@@ -19,14 +21,19 @@
 		6A289921597A9A409CA1AA3E /* StubGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95BCBA60CD0A5CA4A189BD52 /* StubGenerator.swift */; };
 		6DEBA1308D91A1230B2E86CB /* ManagerLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32B1D50B87EB929C6F7DD809 /* ManagerLogicTests.swift */; };
 		766AE841B57B580DA5CC5124 /* PanelPlacementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ED2620993BEC993383F4BF0 /* PanelPlacementTests.swift */; };
+		7860D95F03E13AF0EABBA020 /* Folder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB94605F45B0088ACEB76B7 /* Folder.swift */; };
 		78B6B2196900138DC0FCF4E6 /* PanelPlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4497350E6802CD13A670A2F /* PanelPlacement.swift */; };
 		7E7A4E520DCED837B4EE232D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 323B0BA0FEAFEB17B53088C7 /* AppDelegate.swift */; };
+		841F063F26C3A2ADF11221B0 /* ManagerRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ED8F639F3B0458DB3406249 /* ManagerRequest.swift */; };
+		8501F54CDB757B3A47D6C5D9 /* ManagerRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ED8F639F3B0458DB3406249 /* ManagerRequest.swift */; };
 		9F1975628B566B690CBE26DC /* Folder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB94605F45B0088ACEB76B7 /* Folder.swift */; };
 		B2D402578757955C37579B22 /* DockPrefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60664DEF0BCDB407B80AAF5B /* DockPrefs.swift */; };
 		B445781D6E57C08718107D8E /* PanelPlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4497350E6802CD13A670A2F /* PanelPlacement.swift */; };
 		BA093F91F74CE69158C3CD6B /* PanelPlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4497350E6802CD13A670A2F /* PanelPlacement.swift */; };
 		C469220C79574E16D7805C7D /* FolderPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EA56D836B6E327072218DC6 /* FolderPanel.swift */; };
+		D0F3A13358044792C88E4C60 /* ManagerRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ED8F639F3B0458DB3406249 /* ManagerRequest.swift */; };
 		D74F8F90729983DA525CB89D /* FolderModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CE12F7AE6A2C011640DAF09 /* FolderModel.swift */; };
+		DF40D82D3E66711F7AD05863 /* ManagerRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ED8F639F3B0458DB3406249 /* ManagerRequest.swift */; };
 		E369577F53561BDE811F43FC /* StubGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95BCBA60CD0A5CA4A189BD52 /* StubGenerator.swift */; };
 		EEA75B9013832258EC4FAC3E /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CFCC9FDD03A5ACFCB26B7D1 /* AppIcon.swift */; };
 /* End PBXBuildFile section */
@@ -39,9 +46,27 @@
 			remoteGlobalIDString = 4DFBC3B0C2035A164982B175;
 			remoteInfo = FolderStub;
 		};
+		9C5FEB02CC4E0BAA0496E842 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C39037E652B13BB45A2E9CE8 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DD14E63F8F545BA1448A4719;
+			remoteInfo = FolderDockMenu;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		D6047C19B2A2505607D183D0 /* Embed Dependencies */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				0A7423AAFB70AC9599613787 /* FolderDockMenu.bundle in Embed Dependencies */,
+			);
+			name = "Embed Dependencies";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F98ED1165B58C4613A2EB497 /* Embed Dependencies */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -58,14 +83,18 @@
 /* Begin PBXFileReference section */
 		0944784E4E56E8F2E72FAB07 /* FolderStub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FolderStub.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0CE12F7AE6A2C011640DAF09 /* FolderModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderModel.swift; sourceTree = "<group>"; };
+		0ED8F639F3B0458DB3406249 /* ManagerRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerRequest.swift; sourceTree = "<group>"; };
 		2003587CC5C595D704965F52 /* DockFolders.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DockFolders.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2CD118D7462E0C7FBEC9A1D5 /* FolderDockMenu.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FolderDockMenu.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		323B0BA0FEAFEB17B53088C7 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		32B1D50B87EB929C6F7DD809 /* ManagerLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerLogicTests.swift; sourceTree = "<group>"; };
+		40E64907983C4F25DB04D926 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		472FAB6696738CE99297BD29 /* DockFoldersApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockFoldersApp.swift; sourceTree = "<group>"; };
 		4CFCC9FDD03A5ACFCB26B7D1 /* AppIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIcon.swift; sourceTree = "<group>"; };
 		4EA56D836B6E327072218DC6 /* FolderPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderPanel.swift; sourceTree = "<group>"; };
 		60664DEF0BCDB407B80AAF5B /* DockPrefs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockPrefs.swift; sourceTree = "<group>"; };
 		6ED2620993BEC993383F4BF0 /* PanelPlacementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelPlacementTests.swift; sourceTree = "<group>"; };
+		7D72CDB26D8F1C83A5FFC662 /* DockMenuPlugIn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockMenuPlugIn.swift; sourceTree = "<group>"; };
 		95BCBA60CD0A5CA4A189BD52 /* StubGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubGenerator.swift; sourceTree = "<group>"; };
 		993D1C8D5A2B79689A9DF94E /* FolderPanelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderPanelTests.swift; sourceTree = "<group>"; };
 		B40E8CFA6EF770A432DFC1BA /* DockFoldersTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DockFoldersTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -90,6 +119,7 @@
 			isa = PBXGroup;
 			children = (
 				B6E1BD7B47FA9B19A97389B5 /* DockFolders */,
+				A9A443D21E529FE4EA191D57 /* FolderDockMenu */,
 				6C3714C9A408CD1F51163392 /* FolderStub */,
 				A4211F72275CCE35B3C6A232 /* Shared */,
 				AF2D9E7D88AE4A2BF024BB3C /* Tests */,
@@ -102,9 +132,19 @@
 			children = (
 				4CFCC9FDD03A5ACFCB26B7D1 /* AppIcon.swift */,
 				CEB94605F45B0088ACEB76B7 /* Folder.swift */,
+				0ED8F639F3B0458DB3406249 /* ManagerRequest.swift */,
 				E4497350E6802CD13A670A2F /* PanelPlacement.swift */,
 			);
 			path = Shared;
+			sourceTree = "<group>";
+		};
+		A9A443D21E529FE4EA191D57 /* FolderDockMenu */ = {
+			isa = PBXGroup;
+			children = (
+				7D72CDB26D8F1C83A5FFC662 /* DockMenuPlugIn.swift */,
+				40E64907983C4F25DB04D926 /* Info.plist */,
+			);
+			path = FolderDockMenu;
 			sourceTree = "<group>";
 		};
 		AF2D9E7D88AE4A2BF024BB3C /* Tests */ = {
@@ -134,6 +174,7 @@
 			children = (
 				2003587CC5C595D704965F52 /* DockFolders.app */,
 				B40E8CFA6EF770A432DFC1BA /* DockFoldersTests.xctest */,
+				2CD118D7462E0C7FBEC9A1D5 /* FolderDockMenu.bundle */,
 				0944784E4E56E8F2E72FAB07 /* FolderStub.app */,
 			);
 			name = Products;
@@ -147,10 +188,12 @@
 			buildConfigurationList = 415F7497E72DC85CB1D3B3FA /* Build configuration list for PBXNativeTarget "FolderStub" */;
 			buildPhases = (
 				28F086DC6307E91E6994CAF8 /* Sources */,
+				D6047C19B2A2505607D183D0 /* Embed Dependencies */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				275E79F49BFFBDC5C13F9AE8 /* PBXTargetDependency */,
 			);
 			name = FolderStub;
 			packageProductDependencies = (
@@ -195,6 +238,23 @@
 			productReference = B40E8CFA6EF770A432DFC1BA /* DockFoldersTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		DD14E63F8F545BA1448A4719 /* FolderDockMenu */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5BF06C5BA89E2DB3F7A80BF4 /* Build configuration list for PBXNativeTarget "FolderDockMenu" */;
+			buildPhases = (
+				C17FC6DCADE7A8AE87CB06A3 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FolderDockMenu;
+			packageProductDependencies = (
+			);
+			productName = FolderDockMenu;
+			productReference = 2CD118D7462E0C7FBEC9A1D5 /* FolderDockMenu.bundle */;
+			productType = "com.apple.product-type.bundle";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -205,15 +265,19 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					4DFBC3B0C2035A164982B175 = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = JXP2S296CC;
 						ProvisioningStyle = Manual;
 					};
 					539917B7243C69605B777169 = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = JXP2S296CC;
 						ProvisioningStyle = Manual;
 					};
 					5EC81DE6BEE514D2C3D45048 = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = JXP2S296CC;
+						ProvisioningStyle = Manual;
+					};
+					DD14E63F8F545BA1448A4719 = {
+						DevelopmentTeam = JXP2S296CC;
 						ProvisioningStyle = Manual;
 					};
 				};
@@ -234,6 +298,7 @@
 			targets = (
 				539917B7243C69605B777169 /* DockFolders */,
 				4DFBC3B0C2035A164982B175 /* FolderStub */,
+				DD14E63F8F545BA1448A4719 /* FolderDockMenu */,
 				5EC81DE6BEE514D2C3D45048 /* DockFoldersTests */,
 			);
 		};
@@ -249,6 +314,7 @@
 				0A23370BD580B3FDD43709E7 /* DockPrefs.swift in Sources */,
 				9F1975628B566B690CBE26DC /* Folder.swift in Sources */,
 				D74F8F90729983DA525CB89D /* FolderModel.swift in Sources */,
+				DF40D82D3E66711F7AD05863 /* ManagerRequest.swift in Sources */,
 				BA093F91F74CE69158C3CD6B /* PanelPlacement.swift in Sources */,
 				6A289921597A9A409CA1AA3E /* StubGenerator.swift in Sources */,
 			);
@@ -262,6 +328,7 @@
 				EEA75B9013832258EC4FAC3E /* AppIcon.swift in Sources */,
 				19402D039C2156934BA121F3 /* Folder.swift in Sources */,
 				0111F590EC87CCED91906F7C /* FolderPanel.swift in Sources */,
+				841F063F26C3A2ADF11221B0 /* ManagerRequest.swift in Sources */,
 				B445781D6E57C08718107D8E /* PanelPlacement.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -276,15 +343,31 @@
 				C469220C79574E16D7805C7D /* FolderPanel.swift in Sources */,
 				1669108F4BFFB751D6CFB523 /* FolderPanelTests.swift in Sources */,
 				6DEBA1308D91A1230B2E86CB /* ManagerLogicTests.swift in Sources */,
+				D0F3A13358044792C88E4C60 /* ManagerRequest.swift in Sources */,
 				78B6B2196900138DC0FCF4E6 /* PanelPlacement.swift in Sources */,
 				766AE841B57B580DA5CC5124 /* PanelPlacementTests.swift in Sources */,
 				E369577F53561BDE811F43FC /* StubGenerator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C17FC6DCADE7A8AE87CB06A3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2D0A332339531E6C06FEA39B /* DockMenuPlugIn.swift in Sources */,
+				7860D95F03E13AF0EABBA020 /* Folder.swift in Sources */,
+				8501F54CDB757B3A47D6C5D9 /* ManagerRequest.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		275E79F49BFFBDC5C13F9AE8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DD14E63F8F545BA1448A4719 /* FolderDockMenu */;
+			targetProxy = 9C5FEB02CC4E0BAA0496E842 /* PBXContainerItemProxy */;
+		};
 		42BF93EB2F8A7575397EAB86 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 4DFBC3B0C2035A164982B175 /* FolderStub */;
@@ -320,6 +403,7 @@
 					"@executable_path/../Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.esilverman.DockFolders.FolderStub;
+				PRODUCT_NAME = "DockFolders Folder";
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -335,7 +419,23 @@
 					"@executable_path/../Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.esilverman.DockFolders.FolderStub;
+				PRODUCT_NAME = "DockFolders Folder";
 				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		6B08B5BEDDA3ECCCCB52E325 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = FolderDockMenu/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.esilverman.DockFolders.DockMenu;
+				SDKROOT = macosx;
+				WRAPPER_EXTENSION = docktileplugin;
 			};
 			name = Debug;
 		};
@@ -388,11 +488,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = JXP2S296CC;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -413,6 +513,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CODE_SIGN_FLAGS = "--timestamp=none";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -435,6 +536,21 @@
 				SDKROOT = macosx;
 			};
 			name = Debug;
+		};
+		D581BB8FE8903F51B3417BDE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = FolderDockMenu/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.esilverman.DockFolders.DockMenu;
+				SDKROOT = macosx;
+				WRAPPER_EXTENSION = docktileplugin;
+			};
+			name = Release;
 		};
 		D8A88DF3C01EBE89F376FFD0 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -484,11 +600,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = JXP2S296CC;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -502,6 +618,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				OTHER_CODE_SIGN_FLAGS = "--timestamp=none";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -527,6 +644,15 @@
 			buildConfigurations = (
 				6547D7837D5A7845D05018AF /* Debug */,
 				5DEFDE9D3B5E8312DE4B5ACC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		5BF06C5BA89E2DB3F7A80BF4 /* Build configuration list for PBXNativeTarget "FolderDockMenu" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6B08B5BEDDA3ECCCCB52E325 /* Debug */,
+				D581BB8FE8903F51B3417BDE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

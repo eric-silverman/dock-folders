@@ -25,9 +25,11 @@ The Xcode project is generated from `project.yml`. After adding/removing files, 
 4. Optional: choose **Grid** or **List** for how the folder opens, and a color for its Dock icon.
 5. Click **Add to Dock**. After you confirm, the Dock restarts with the folder on the right side, next to Downloads, so folders stay apart from the running apps on the left. (Folders added to the left side by earlier versions keep working.)
 
-Drop files on a folder in the Dock to open them: the folder shows "Open … with", dims apps that can't open them, and clicking an app opens the files in it. A dot marks apps in the folder that are already running; clicking one brings it to the front. App-list changes take effect the next time you open the folder. Changing a folder's first 9 apps rebuilds its icon. The Dock caches icons, so click **Refresh Dock** in the toolbar when it appears. Renaming a folder that's in the Dock restarts the Dock automatically; otherwise its tile would break.
+Drop apps on a folder in the Dock to add them to it (DockFolders saves them, rebuilds the icon, and refreshes the Dock; it starts in the background if it isn't running). Right-click a folder in the Dock and choose **Edit “Name”…** to open it in DockFolders. Drop other files on a folder to open them: the folder shows "Open … with", dims apps that can't open them, and clicking an app opens the files in it. A dot marks apps in the folder that are already running; clicking one brings it to the front. App-list changes take effect the next time you open the folder. Changing a folder's first 9 apps rebuilds its icon. The Dock caches icons, so click **Refresh Dock** in the toolbar when it appears. Renaming a folder that's in the Dock restarts the Dock automatically; otherwise its tile would break.
 
 **Delete Folder** moves the folder app to the Trash and takes it out of the Dock. The apps inside it aren't touched.
+
+When DockFolders starts, it rebuilds any folder app made by an older version (each records the template it came from), so updates reach existing folders; the Dock restarts once if any of them is in it.
 
 ## Files
 
@@ -42,13 +44,14 @@ Drop files on a folder in the Dock to open them: the folder shows "Open … with
 
 - **Icon caching:** after you change a folder's apps, the Dock can keep showing the old icon or name until it restarts (**Refresh Dock**).
 - **Position:** the folder opens at the mouse pointer, above or beside the Dock, rather than lined up with the exact tile.
-- **Ad-hoc signing:** folder apps are signed locally and work on this Mac. Copying them to another Mac isn't supported.
+- **Signing:** DockFolders and its folder apps are signed with the Developer ID certificate in project.yml (macOS won't load the Dock menu plug-in from an ad-hoc signed app). Building on another Mac needs that certificate, or change `DEVELOPMENT_TEAM`/`CODE_SIGN_IDENTITY`; with ad-hoc signing everything works except the Dock right-click "Edit" item.
 - **Running apps still get their own Dock icon:** macOS adds a Dock icon for every running app, and no public API lets another app hide it. The icon goes away when you quit the app (if "Show suggested and recent apps in Dock" is off).
 - **Auto-hidden Dock:** the folder guesses which edge the Dock is on from where the mouse is.
 
 ## Layout
 
-- `FolderStub/`: the per-folder app (grid panel).
+- `FolderStub/`: the per-folder app (the popup), built as "DockFolders Folder.app" and copied for each folder.
+- `FolderDockMenu/`: Dock tile plug-in inside each folder app; adds "Edit “Name”…" to the Dock's right-click menu.
 - `DockFolders/`: the manager app (UI, folder-app generation, icon rendering).
 - `Shared/`: code used by both apps and the tests (config, plist rewriting, Dock prefs, panel positioning).
 - `Tests/`: unit tests.
