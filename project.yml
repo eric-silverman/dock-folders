@@ -52,6 +52,7 @@ targets:
       - Shared
       - DockFolders/DockPrefs.swift
       - DockFolders/StubGenerator.swift
+      - FolderStub/FolderPanel.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.esilverman.DockFolders.Tests

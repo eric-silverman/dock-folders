@@ -1,10 +1,13 @@
 import AppKit
+import QuartzCore
 
 /// Borderless vibrant grid of app icons, styled like a Dock stack grid.
 final class FolderPanel: NSPanel {
     static let cell = NSSize(width: 96, height: 96)
     static let padding: CGFloat = 12
     static let maxColumns = 6
+    static let rise: CGFloat = 12              // open animation: distance the grid slides out of the Dock
+    static let openDuration: TimeInterval = 0.12
 
     init(apps: [URL], onPick: @escaping (URL) -> Void) {
         let n = max(apps.count, 1)
@@ -13,8 +16,11 @@ final class FolderPanel: NSPanel {
         let size = NSSize(width: CGFloat(cols) * Self.cell.width + 2 * Self.padding,
                           height: CGFloat(rows) * Self.cell.height + 2 * Self.padding)
 
-        super.init(contentRect: NSRect(origin: .zero, size: size), styleMask: [.borderless],
+        // Non-activating: macOS won't let a Dock-launched UI-element app take focus, and a regular panel
+        // hides while its app is inactive. This one shows anyway and can still be key (for Escape).
+        super.init(contentRect: NSRect(origin: .zero, size: size), styleMask: [.borderless, .nonactivatingPanel],
                    backing: .buffered, defer: false)
+        hidesOnDeactivate = false
         isOpaque = false
         backgroundColor = .clear
         hasShadow = true
@@ -53,11 +59,30 @@ final class FolderPanel: NSPanel {
         if event.keyCode == 53 { NSApp.terminate(nil) } else { super.keyDown(with: event) } // Escape
     }
 
-    func place(near mouse: NSPoint) {
-        guard let screen = NSScreen.screens.first(where: { NSMouseInRect(mouse, $0.frame, false) }) ?? NSScreen.main
-        else { return center() }
-        setFrameOrigin(PanelPlacement.origin(panelSize: frame.size, mouse: mouse,
-                                             screen: screen.frame, visible: screen.visibleFrame))
+    /// Places the grid next to the Dock and animates it in: a short fade while sliding out of the Dock edge.
+    func show(near mouse: NSPoint) {
+        guard let screen = NSScreen.screens.first(where: { NSMouseInRect(mouse, $0.frame, false) }) ?? NSScreen.main else {
+            center()
+            return makeKeyAndOrderFront(nil)
+        }
+        let final = NSRect(origin: PanelPlacement.origin(panelSize: frame.size, mouse: mouse,
+                                                         screen: screen.frame, visible: screen.visibleFrame),
+                           size: frame.size)
+        let d = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? 0 : Self.rise
+        let start = switch PanelPlacement.dockEdge(screen: screen.frame, visible: screen.visibleFrame, mouse: mouse) {
+        case .bottom: final.offsetBy(dx: 0, dy: -d)
+        case .left: final.offsetBy(dx: -d, dy: 0)
+        case .right: final.offsetBy(dx: d, dy: 0)
+        }
+        setFrame(start, display: false)
+        alphaValue = 0
+        makeKeyAndOrderFront(nil)
+        NSAnimationContext.runAnimationGroup { ctx in
+            ctx.duration = Self.openDuration
+            ctx.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            animator().setFrame(final, display: true)
+            animator().alphaValue = 1
+        }
     }
 }
 

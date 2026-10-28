@@ -13,6 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var panel: FolderPanel?
     private var clickMonitor: Any?
+    private var activationObserver: Any?
 
     static func main() {
         let app = NSApplication.shared
@@ -23,12 +24,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let panel = FolderPanel(apps: Self.loadApps()) { [weak self] url in self?.launch(url) }
-        panel.place(near: NSEvent.mouseLocation)
-        NSApp.activate()
-        panel.makeKeyAndOrderFront(nil)
+        panel.show(near: NSEvent.mouseLocation)
         self.panel = panel
-        // Backstop if activation was refused: any click in another app dismisses.
+        // We never become the active app (macOS refuses focus to Dock-launched UI-element apps), so dismiss
+        // on any click in another app, or when another app comes to the front (e.g. Cmd-Tab).
         clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { _ in
+            MainActor.assumeIsolated { NSApp.terminate(nil) }
+        }
+        activationObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { _ in
             MainActor.assumeIsolated { NSApp.terminate(nil) }
         }
     }
