@@ -1,8 +1,8 @@
 # DockFolders
 
-Folders of apps on the **left (apps) side** of the macOS Dock. Click a folder tile and a grid of its apps pops up; click one to launch it.
+Folders of apps in the macOS Dock. Click a folder tile and a grid of its apps pops up; click one to launch it.
 
-The Dock only accepts apps on that side, so each folder is a tiny generated app (`~/Applications/DockFolders/<Name>.app`) that shows the grid and quits.
+Each folder is a tiny generated app (`~/Applications/DockFolders/<Name>.app`) that shows the grid and quits.
 
 ## Build
 
@@ -23,7 +23,7 @@ The Xcode project is generated from `project.yml`. After adding/removing files, 
 2. Click **+** to create a folder, type a name, and press Return.
 3. Drag apps in from Finder, or click **Add Apps…**. Drag rows to reorder.
 4. Optional: choose **Grid** or **List** for how the folder opens, and a color for its Dock icon.
-5. Click **Add to Dock**. After you confirm, the Dock restarts with the folder at the end of the apps side. To place it yourself, choose **Show in Finder Instead** and drag it into the Dock.
+5. Click **Add to Dock**. After you confirm, the Dock restarts with the folder on the right side, next to Downloads, so folders stay apart from the running apps on the left. (Folders added to the left side by earlier versions keep working.)
 
 A dot marks apps in the folder that are already running; clicking one brings it to the front. App-list changes take effect the next time you open the folder. Changing a folder's first 9 apps rebuilds its icon. The Dock caches icons, so click **Refresh Dock** in the toolbar when it appears. Renaming a folder that's in the Dock restarts the Dock automatically; otherwise its tile would break.
 
@@ -34,8 +34,8 @@ A dot marks apps in the folder that are already running; clicking one brings it 
 | Path | What |
 |---|---|
 | `~/Library/Application Support/DockFolders/folders.json` | Folder names and app lists |
-| `~/Library/Application Support/DockFolders/persistent-apps-original.plist` | Your Dock's app list from before DockFolders first changed it (written once) |
-| `~/Library/Application Support/DockFolders/persistent-apps-backup.plist` | Your Dock's app list from just before DockFolders last changed it |
+| `~/Library/Application Support/DockFolders/persistent-{apps,others}-original.plist` | Each side of your Dock from before DockFolders first changed it (written once) |
+| `~/Library/Application Support/DockFolders/persistent-{apps,others}-backup.plist` | Each side of your Dock from just before DockFolders last changed it |
 | `~/Applications/DockFolders/*.app` | Generated folder apps (ad-hoc signed) |
 
 ## Known limitations

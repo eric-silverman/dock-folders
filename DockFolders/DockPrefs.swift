@@ -1,19 +1,28 @@
 import Foundation
 
-/// Reads and edits `persistent-apps` (the left side of the Dock) in com.apple.dock.
+/// Reads and edits the Dock's tile lists in com.apple.dock.
 enum DockPrefs {
     typealias Tile = [String: Any]
+
+    /// The Dock's two sections. Folder apps go on the right (`others`), next to Downloads, so they stay
+    /// apart from the running apps on the left; folders added on the left by earlier versions still work.
+    enum List: String, CaseIterable {
+        case apps = "persistent-apps"     // left of the divider
+        case others = "persistent-others" // right of the divider
+    }
 
     // Values the Dock itself writes in its plist.
     static let urlStringTypeURL = 15 // _CFURLString holds a file:// URL (0 = plain path)
     static let fileTypeApp = 41
 
     struct Unavailable: LocalizedError {
-        var errorDescription: String? { "Couldn't read the Dock's app list, so it was left unchanged." }
+        var errorDescription: String? {
+            "Couldn't read the Dock's settings, so the Dock was left unchanged. Drag the folder from Finder into the Dock instead (Show in Finder)."
+        }
     }
 
     struct WriteFailed: LocalizedError {
-        var errorDescription: String? { "Couldn't save the Dock's app list." }
+        var errorDescription: String? { "Couldn't save the Dock's settings." }
     }
 
     static func path(of tile: Tile) -> String? {
@@ -54,42 +63,44 @@ enum DockPrefs {
     // MARK: - I/O
 
     private static var domain: CFString { "com.apple.dock" as CFString }
-    private static var key: CFString { "persistent-apps" as CFString }
     static let backupDirectory = FolderStore.defaultURL.deletingLastPathComponent()
 
-    static func read() -> [Tile]? {
+    /// nil if the list is missing or unreadable. A missing list is not treated as empty: on a fresh account
+    /// the Dock shows built-in defaults (Downloads) without storing them, and writing would drop those.
+    static func read(_ list: List) -> [Tile]? {
         CFPreferencesAppSynchronize(domain)
-        return CFPreferencesCopyAppValue(key, domain) as? [Tile]
+        return CFPreferencesCopyAppValue(list.rawValue as CFString, domain) as? [Tile]
     }
 
-    static func write(_ tiles: [Tile]) -> Bool {
-        CFPreferencesSetAppValue(key, tiles as CFArray, domain)
+    static func write(_ tiles: [Tile], to list: List) -> Bool {
+        CFPreferencesSetAppValue(list.rawValue as CFString, tiles as CFArray, domain)
         return CFPreferencesAppSynchronize(domain)
     }
 
+    /// Paths of every file tile on either side of the Dock.
     static func paths() -> Set<String> {
-        Set((read() ?? []).compactMap(path(of:)))
+        Set(List.allCases.flatMap { read($0) ?? [] }.compactMap(path(of:)))
     }
 
-    /// Applies `change` to the Dock's app list. Returns whether anything was written.
+    /// Applies `change` to one of the Dock's lists. Returns whether anything was written.
     /// Refuses to write if the list can't be read, so a failed read can never wipe the Dock.
     /// Before writing it saves the current list as the latest backup, plus a one-time backup of
-    /// the list from before DockFolders first touched the Dock.
+    /// the list from before DockFolders first touched it.
     @discardableResult
-    static func update(read: () -> [Tile]? = DockPrefs.read, write: ([Tile]) -> Bool = DockPrefs.write,
+    static func update(_ list: List, read: (() -> [Tile]?)? = nil, write: (([Tile]) -> Bool)? = nil,
                        backupDirectory: URL = DockPrefs.backupDirectory, _ change: ([Tile]) -> [Tile]) throws -> Bool {
-        guard let tiles = read() else { throw Unavailable() }
+        guard let tiles = read.map({ $0() }) ?? Self.read(list) else { throw Unavailable() }
         let updated = change(tiles)
         guard !NSArray(array: updated).isEqual(to: tiles) else { return false }
 
         let fm = FileManager.default
         try fm.createDirectory(at: backupDirectory, withIntermediateDirectories: true)
         let data = try PropertyListSerialization.data(fromPropertyList: tiles, format: .xml, options: 0)
-        let original = backupDirectory.appending(path: "persistent-apps-original.plist")
+        let original = backupDirectory.appending(path: "\(list.rawValue)-original.plist")
         if !fm.fileExists(atPath: original.path) { try data.write(to: original, options: .atomic) }
-        try data.write(to: backupDirectory.appending(path: "persistent-apps-backup.plist"), options: .atomic)
+        try data.write(to: backupDirectory.appending(path: "\(list.rawValue)-backup.plist"), options: .atomic)
 
-        guard write(updated) else { throw WriteFailed() }
+        guard write.map({ $0(updated) }) ?? Self.write(updated, to: list) else { throw WriteFailed() }
         return true
     }
 
