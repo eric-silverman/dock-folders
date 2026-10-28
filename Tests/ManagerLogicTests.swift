@@ -124,9 +124,9 @@ struct DockPrefsEdgeTests {
         try DockPrefs.update(.apps, read: read, write: write, backupDirectory: dir) { DockPrefs.adding(stub, label: "Dev", to: $0) }
         try DockPrefs.update(.apps, read: read, write: write, backupDirectory: dir) { DockPrefs.removing(stub, from: $0) }
         let original = try PropertyListSerialization.propertyList(
-            from: Data(contentsOf: dir.appending(path: "persistent-apps-original.plist")), format: nil) as? [Any]
+            from: Data(contentsOf: dir.appending(path: "\(DockPrefs.List.apps.rawValue)-original.plist")), format: nil) as? [Any]
         let latest = try PropertyListSerialization.propertyList(
-            from: Data(contentsOf: dir.appending(path: "persistent-apps-backup.plist")), format: nil) as? [Any]
+            from: Data(contentsOf: dir.appending(path: "\(DockPrefs.List.apps.rawValue)-backup.plist")), format: nil) as? [Any]
         #expect(original?.count == 1) // pre-DockFolders Dock, never overwritten
         #expect(latest?.count == 2)   // state just before the last write
     }
@@ -139,8 +139,32 @@ struct DockPrefsEdgeTests {
             DockPrefs.adding(stub, label: "Dev", to: $0)
         }
         #expect(right.compactMap(DockPrefs.path(of:)) == [stub.path])
-        #expect(FileManager.default.fileExists(atPath: dir.appending(path: "persistent-others-original.plist").path))
-        #expect(!FileManager.default.fileExists(atPath: dir.appending(path: "persistent-apps-original.plist").path))
+        #expect(FileManager.default.fileExists(atPath: dir.appending(path: "\(DockPrefs.List.others.rawValue)-original.plist").path))
+        #expect(!FileManager.default.fileExists(atPath: dir.appending(path: "\(DockPrefs.List.apps.rawValue)-original.plist").path))
+    }
+
+    @Test func renameAndDeleteCleanBothSides() throws {
+        let dir = tempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let safari = DockPrefs.tile(for: URL(fileURLWithPath: "/Applications/Safari.app", isDirectory: true), label: "Safari")
+        var dock: [DockPrefs.List: [DockPrefs.Tile]] = [
+            .apps: [safari, DockPrefs.tile(for: stub, label: "Dev")], // left, from an older version
+            .others: [DockPrefs.tile(for: stub, label: "Dev")],        // and right
+        ]
+        func each(_ change: ([DockPrefs.Tile]) -> [DockPrefs.Tile]) throws {
+            for list in DockPrefs.List.allCases {
+                try DockPrefs.update(list, read: { dock[list] }, write: { dock[list] = $0; return true },
+                                     backupDirectory: dir, change)
+            }
+        }
+        let renamed = URL(fileURLWithPath: "/Users/me/Applications/DockFolders/Code.app", isDirectory: true)
+        try each { DockPrefs.replacing(stub, with: renamed, label: "Code", in: $0) }
+        #expect(dock[.apps]!.compactMap(DockPrefs.path(of:)) == ["/Applications/Safari.app", renamed.path])
+        #expect(dock[.others]!.compactMap(DockPrefs.path(of:)) == [renamed.path])
+
+        try each { DockPrefs.removing(renamed, from: $0) }
+        #expect(dock[.apps]!.compactMap(DockPrefs.path(of:)) == ["/Applications/Safari.app"])
+        #expect(dock[.others]!.isEmpty)
     }
 
     @Test func updateThrowsWhenWriteFails() {

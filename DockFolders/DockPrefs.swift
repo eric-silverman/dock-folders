@@ -16,11 +16,13 @@ enum DockPrefs {
     static let fileTypeApp = 41
 
     struct Unavailable: LocalizedError {
-        var errorDescription: String? { "Couldn't read the Dock's app list, so it was left unchanged." }
+        var errorDescription: String? {
+            "Couldn't read the Dock's settings, so the Dock was left unchanged. Drag the folder from Finder into the Dock instead (Show in Finder)."
+        }
     }
 
     struct WriteFailed: LocalizedError {
-        var errorDescription: String? { "Couldn't save the Dock's app list." }
+        var errorDescription: String? { "Couldn't save the Dock's settings." }
     }
 
     static func path(of tile: Tile) -> String? {
@@ -63,11 +65,11 @@ enum DockPrefs {
     private static var domain: CFString { "com.apple.dock" as CFString }
     static let backupDirectory = FolderStore.defaultURL.deletingLastPathComponent()
 
+    /// nil if the list is missing or unreadable. A missing list is not treated as empty: on a fresh account
+    /// the Dock shows built-in defaults (Downloads) without storing them, and writing would drop those.
     static func read(_ list: List) -> [Tile]? {
         CFPreferencesAppSynchronize(domain)
-        if let tiles = CFPreferencesCopyAppValue(list.rawValue as CFString, domain) as? [Tile] { return tiles }
-        // An empty right side can be stored as no key at all; only trust that if the Dock prefs are readable.
-        return list == .others && read(.apps) != nil ? [] : nil
+        return CFPreferencesCopyAppValue(list.rawValue as CFString, domain) as? [Tile]
     }
 
     static func write(_ tiles: [Tile], to list: List) -> Bool {

@@ -122,6 +122,8 @@ final class FolderModel {
             // Look the folder up again: it may have been renamed or deleted while building.
             guard await build.value, let folder = folder(id) else { return }
             let stub = StubGenerator.url(for: folder.name)
+            reloadDockState() // already on either side (e.g. dragged in while we were open): don't add a second tile
+            guard !isInDock(folder) else { return }
             if editDock(.others, { DockPrefs.adding(stub, label: folder.name, to: $0) }) { refreshDock() }
         }
     }
