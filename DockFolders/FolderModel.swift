@@ -82,6 +82,18 @@ final class FolderModel {
         changed(id)
     }
 
+    func setLayout(_ layout: FolderLayout, for id: UUID) {
+        guard let i = index(id), folders[i].layout != layout else { return }
+        folders[i].layout = layout
+        changed(id) // rebuild: folder apps made by an older DockFolders don't know about layouts
+    }
+
+    func setColor(_ color: FolderColor, for id: UUID) {
+        guard let i = index(id), folders[i].color != color else { return }
+        folders[i].color = color
+        changed(id) // icon rebuild
+    }
+
     func removeApp(_ path: String, from id: UUID) {
         guard let i = index(id) else { return }
         folders[i].appPaths.removeAll { $0 == path }

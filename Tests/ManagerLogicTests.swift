@@ -8,9 +8,25 @@ struct FolderStoreTests {
         let folders = [
             Folder(id: UUID(), name: "Dev", appPaths: ["/Applications/Xcode.app", "/System/Applications/Utilities/Terminal.app"]),
             Folder(id: UUID(), name: "Empty", appPaths: []),
+            Folder(id: UUID(), name: "Styled", appPaths: [], layout: .list, color: .purple),
         ]
         try FolderStore.save(folders, to: url)
         #expect(try FolderStore.load(from: url) == folders)
+    }
+
+    @Test func olderFilesWithoutDisplayOptionsStillLoad() throws {
+        let json = #"[{"id":"11111111-2222-3333-4444-555555555555","name":"Old","appPaths":["/Applications/Safari.app"]}]"#
+        let folder = try JSONDecoder().decode([Folder].self, from: Data(json.utf8))[0]
+        #expect(folder.name == "Old")
+        #expect(folder.layout == .grid)
+        #expect(folder.color == .graphite)
+    }
+
+    @Test func unknownDisplayOptionValuesFallBackToDefaults() throws {
+        let json = #"[{"id":"11111111-2222-3333-4444-555555555555","name":"New","appPaths":[],"layout":"fan","color":"teal"}]"#
+        let folder = try JSONDecoder().decode([Folder].self, from: Data(json.utf8))[0]
+        #expect(folder.layout == .grid)
+        #expect(folder.color == .graphite)
     }
 
     @Test func missingFileIsEmpty() throws {
@@ -150,6 +166,10 @@ struct StubGeneratorTests {
         let five = FolderIcon.cells(count: 5, in: r)
         #expect(five[0] == CGRect(x: 0, y: 45, width: 30, height: 30))
         #expect(five[3] == CGRect(x: 15, y: 15, width: 30, height: 30))
+    }
+
+    @Test func iconColorReachesRenderer() {
+        #expect(FolderIcon.icns(appPaths: [], color: .red) != FolderIcon.icns(appPaths: [], color: .blue))
     }
 
     @Test func icnsContainerIsWellFormed() {
