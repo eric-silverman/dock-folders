@@ -74,7 +74,7 @@ enum StubGenerator {
     }
 }
 
-/// Composite folder icon: up to 9 app icons in a 3×3 grid on a rounded-rect background.
+/// Composite folder icon: up to 9 app icons in a grid sized to the count, on a rounded-rect background.
 enum FolderIcon {
     // (OSType, pixel size) for every standard slot, 16pt…512pt@2x.
     static let slots: [(String, Int)] = [
@@ -115,17 +115,25 @@ enum FolderIcon {
         NSGradient(starting: NSColor(white: 0.42, alpha: 1), ending: NSColor(white: 0.22, alpha: 1))!.draw(in: shape, angle: -90)
 
         let inner = body.insetBy(dx: body.width * 0.08, dy: body.width * 0.08)
-        let cell = inner.width / 3
-        let rows = (icons.count + 2) / 3
-        let top = inner.maxY - CGFloat(3 - rows) * cell / 2 // center the used rows vertically
-        for (i, icon) in icons.enumerated() {
-            let row = i / 3, col = i % 3
-            let inRow = min(3, icons.count - row * 3)
-            let left = inner.minX + CGFloat(3 - inRow) * cell / 2 // center a short row
-            let r = NSRect(x: left + CGFloat(col) * cell, y: top - CGFloat(row + 1) * cell, width: cell, height: cell)
-            icon.draw(in: r.insetBy(dx: cell * 0.04, dy: cell * 0.04))
+        for (icon, r) in zip(icons, cells(count: icons.count, in: inner)) {
+            icon.draw(in: r.insetBy(dx: r.width * 0.04, dy: r.width * 0.04))
         }
         NSGraphicsContext.restoreGraphicsState()
         return rep.representation(using: .png, properties: [:])!
+    }
+
+    /// Grid sized to the app count: 1 fills the tile, 2–4 use 2×2, 5–9 use 3×3.
+    /// Partial rows are centered; rows fill top-down (AppKit coordinates, y up).
+    static func cells(count: Int, in rect: CGRect) -> [CGRect] {
+        let cols = count <= 1 ? 1 : count <= 4 ? 2 : 3
+        let cell = rect.width / CGFloat(cols)
+        let rows = (count + cols - 1) / cols
+        let top = rect.maxY - CGFloat(cols - rows) * cell / 2 // center the used rows vertically
+        return (0..<count).map { i in
+            let row = i / cols, col = i % cols
+            let inRow = min(cols, count - row * cols)
+            let left = rect.minX + CGFloat(cols - inRow) * cell / 2 // center a short row
+            return CGRect(x: left + CGFloat(col) * cell, y: top - CGFloat(row + 1) * cell, width: cell, height: cell)
+        }
     }
 }

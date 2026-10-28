@@ -135,6 +135,23 @@ struct StubGeneratorTests {
         #expect(StubGenerator.url(for: input).deletingLastPathComponent().path == StubGenerator.directory.path)
     }
 
+    @Test func iconGridSizesToAppCount() {
+        let r = CGRect(x: 0, y: 0, width: 90, height: 90)
+        #expect(FolderIcon.cells(count: 0, in: r).isEmpty)
+        #expect(FolderIcon.cells(count: 1, in: r) == [r])
+        let four = FolderIcon.cells(count: 4, in: r)
+        #expect(four == [CGRect(x: 0, y: 45, width: 45, height: 45), CGRect(x: 45, y: 45, width: 45, height: 45),
+                         CGRect(x: 0, y: 0, width: 45, height: 45), CGRect(x: 45, y: 0, width: 45, height: 45)])
+        // 3 apps: 2×2 with the lone bottom icon centered.
+        #expect(FolderIcon.cells(count: 3, in: r)[2] == CGRect(x: 22.5, y: 0, width: 45, height: 45))
+        let nine = FolderIcon.cells(count: 9, in: r)
+        #expect(nine.count == 9 && nine.allSatisfy { r.contains($0) && $0.width == 30 })
+        // 5 apps: 3 on top, 2 centered below, both rows centered vertically.
+        let five = FolderIcon.cells(count: 5, in: r)
+        #expect(five[0] == CGRect(x: 0, y: 45, width: 30, height: 30))
+        #expect(five[3] == CGRect(x: 15, y: 15, width: 30, height: 30))
+    }
+
     @Test func icnsContainerIsWellFormed() {
         let data = FolderIcon.icns(appPaths: [])
         #expect(data.prefix(4) == Data("icns".utf8))
