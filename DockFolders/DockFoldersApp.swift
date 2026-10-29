@@ -1,9 +1,12 @@
+import Sparkle
 import SwiftUI
 import UniformTypeIdentifiers
 
 @main
 struct DockFoldersApp: App {
     @State private var model = FolderModel()
+    /// Sparkle: checks the feed in Info.plist (SUFeedURL) automatically and on "Check for Updates…".
+    private let updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
 
     var body: some Scene {
         Window("DockFolders", id: "main") {
@@ -14,7 +17,7 @@ struct DockFoldersApp: App {
         // Launched by a folder app just to rebuild it: stay in the menu bar, no window.
         .defaultLaunchBehavior(CommandLine.arguments.contains(StubInfo.backgroundArgument) ? .suppressed : .automatic)
         MenuBarExtra {
-            MenuContent().environment(model)
+            MenuContent(updater: updater.updater).environment(model)
         } label: {
             // The menu bar label is always alive, so it handles "show the window" requests from the model.
             MenuBarLabel().environment(model)
@@ -36,6 +39,7 @@ private struct MenuBarLabel: View {
 }
 
 private struct MenuContent: View {
+    let updater: SPUUpdater
     @Environment(FolderModel.self) private var model
     @Environment(\.openWindow) private var openWindow
 
@@ -45,6 +49,10 @@ private struct MenuContent: View {
             NSApp.activate()
         }
         Button("Refresh Dock") { model.refreshDock() }
+        Button("Check for Updates…") {
+            NSApp.activate() // menu bar app: bring Sparkle's window to the front
+            updater.checkForUpdates()
+        }
         Divider()
         Button("Quit DockFolders") { NSApp.terminate(nil) }.keyboardShortcut("q")
     }

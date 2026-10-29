@@ -29,6 +29,8 @@ Drop apps on a folder in the Dock to add them to it (DockFolders saves them, reb
 
 **Delete Folder** moves the folder app to the Trash and takes it out of the Dock. The apps inside it aren't touched.
 
+DockFolders checks for updates daily (Sparkle); **Check for Updates…** is in the menu bar menu.
+
 When DockFolders starts, it rebuilds any folder app made by an older version (each records the template it came from), so updates reach existing folders; the Dock restarts once if any of them is in it.
 
 ## Files
@@ -38,7 +40,7 @@ When DockFolders starts, it rebuilds any folder app made by an older version (ea
 | `~/Library/Application Support/DockFolders/folders.json` | Folder names and app lists |
 | `~/Library/Application Support/DockFolders/persistent-{apps,others}-original.plist` | Each side of your Dock from before DockFolders first changed it (written once) |
 | `~/Library/Application Support/DockFolders/persistent-{apps,others}-backup.plist` | Each side of your Dock from just before DockFolders last changed it |
-| `~/Applications/DockFolders/*.app` | Generated folder apps (ad-hoc signed) |
+| `~/Applications/DockFolders/*.app` | Generated folder apps (signed with DockFolders' certificate, ad hoc if that fails) |
 
 ## Known limitations
 
@@ -47,6 +49,17 @@ When DockFolders starts, it rebuilds any folder app made by an older version (ea
 - **Signing:** DockFolders and its folder apps are signed with the Developer ID certificate in project.yml (macOS won't load the Dock menu plug-in from an ad-hoc signed app). Building on another Mac needs that certificate, or change `DEVELOPMENT_TEAM`/`CODE_SIGN_IDENTITY`; with ad-hoc signing everything works except the Dock right-click "Edit" item.
 - **Running apps still get their own Dock icon:** macOS adds a Dock icon for every running app, and no public API lets another app hide it. The icon goes away when you quit the app (if "Show suggested and recent apps in Dock" is off).
 - **Auto-hidden Dock:** the folder guesses which edge the Dock is on from where the mouse is.
+
+## Releasing
+
+`scripts/release.sh 0.2.0` tests, builds a Release with that version (build number = commit count), notarizes and staples it, signs a Sparkle `appcast.xml`, tags `v0.2.0`, and publishes both files as a GitHub release. Installed copies find it through `releases/latest/download/appcast.xml`, so the repo must be public. Run it from a clean `main` that matches `origin/main`.
+
+One-time setup on the releasing Mac:
+
+- **Developer ID certificate** for team `JXP2S296CC` in the login keychain.
+- **Notary credentials:** `xcrun notarytool store-credentials dockfolders-notary --apple-id <you> --team-id JXP2S296CC` (with an app-specific password). Another profile name works via `NOTARY_PROFILE=…`.
+- **Sparkle signing key:** in the login keychain as account `dockfolders`; its public half is `SUPublicEDKey` in project.yml. Back it up (`generate_keys --account dockfolders -x key.txt`, from `build/SourcePackages/artifacts/sparkle/Sparkle/bin`) — without it, existing installs can't accept new updates.
+- **`gh`** logged in with push access.
 
 ## Layout
 

@@ -15,10 +15,16 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUFeedURL</key>
+	<string>https://github.com/eric-silverman/dock-folders/releases/latest/download/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>JgvGso00otfqDFfyJuRxWg9ovbCoEM6KoZeh+rWz3Pw=</string>
 </dict>
 </plist>
