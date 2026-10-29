@@ -1,4 +1,8 @@
 name: DockFolders
+packages:
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.6.0"
 options:
   bundleIdPrefix: com.esilverman
   deploymentTarget:
@@ -10,13 +14,23 @@ settings:
     # Developer ID: macOS refuses to load an ad-hoc signed Dock tile plug-in (FolderDockMenu).
     CODE_SIGN_IDENTITY: "Developer ID Application"
     DEVELOPMENT_TEAM: JXP2S296CC
-    OTHER_CODE_SIGN_FLAGS: --timestamp=none
+    ENABLE_HARDENED_RUNTIME: YES # required for notarization
+    # Overridden by scripts/release.sh (version from the tag, build number from the commit count).
+    MARKETING_VERSION: 0.1.0
+    CURRENT_PROJECT_VERSION: 1
+  configs:
+    Debug:
+      OTHER_CODE_SIGN_FLAGS: --timestamp=none # day-to-day builds stay offline
+    Release:
+      OTHER_CODE_SIGN_FLAGS: --timestamp # notarization needs a secure timestamp
+      CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO # no get-task-allow, which notarization rejects
 targets:
   DockFolders:
     type: application
     platform: macOS
     sources: [DockFolders, Shared]
     dependencies:
+      - package: Sparkle
       # The template every folder app is copied from.
       - target: FolderStub
         embed: true
@@ -28,6 +42,12 @@ targets:
       properties:
         LSUIElement: true
         CFBundleName: DockFolders
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        # Sparkle: the newest GitHub release always carries the feed.
+        SUFeedURL: https://github.com/eric-silverman/dock-folders/releases/latest/download/appcast.xml
+        SUEnableAutomaticChecks: true
+        SUPublicEDKey: JgvGso00otfqDFfyJuRxWg9ovbCoEM6KoZeh+rWz3Pw=
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.esilverman.DockFolders

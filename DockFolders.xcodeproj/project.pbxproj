@@ -11,6 +11,7 @@
 		0A23370BD580B3FDD43709E7 /* DockPrefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60664DEF0BCDB407B80AAF5B /* DockPrefs.swift */; };
 		0A7423AAFB70AC9599613787 /* FolderDockMenu.bundle in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 2CD118D7462E0C7FBEC9A1D5 /* FolderDockMenu.bundle */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		11FA35C9DF1469659E58706A /* DockFoldersApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 472FAB6696738CE99297BD29 /* DockFoldersApp.swift */; };
+		134FDB9EC8DD00FF9055305A /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 8F4DB2EE126B1E992946FF4D /* Sparkle */; };
 		1669108F4BFFB751D6CFB523 /* FolderPanelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 993D1C8D5A2B79689A9DF94E /* FolderPanelTests.swift */; };
 		19402D039C2156934BA121F3 /* Folder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB94605F45B0088ACEB76B7 /* Folder.swift */; };
 		2D0A332339531E6C06FEA39B /* DockMenuPlugIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D72CDB26D8F1C83A5FFC662 /* DockMenuPlugIn.swift */; };
@@ -103,6 +104,17 @@
 		E4497350E6802CD13A670A2F /* PanelPlacement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelPlacement.swift; sourceTree = "<group>"; };
 		EC5605934DDDB422B91EA0CC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0649D7828D28C57D748083FB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				134FDB9EC8DD00FF9055305A /* Sparkle in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		6C3714C9A408CD1F51163392 /* FolderStub */ = {
@@ -207,6 +219,7 @@
 			buildConfigurationList = 9BAB8BA691BB5E340F29F552 /* Build configuration list for PBXNativeTarget "DockFolders" */;
 			buildPhases = (
 				00C898CC8180A267C381DF1A /* Sources */,
+				0649D7828D28C57D748083FB /* Frameworks */,
 				F98ED1165B58C4613A2EB497 /* Embed Dependencies */,
 			);
 			buildRules = (
@@ -216,6 +229,7 @@
 			);
 			name = DockFolders;
 			packageProductDependencies = (
+				8F4DB2EE126B1E992946FF4D /* Sparkle */,
 			);
 			productName = DockFolders;
 			productReference = 2003587CC5C595D704965F52 /* DockFolders.app */;
@@ -291,6 +305,9 @@
 			);
 			mainGroup = 7187BE62E89D2466521C08D7;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				C7D250D83E9EF086D4E3C159 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C1D03845CB2705578B254B9E /* Products */;
 			projectDirPath = "";
@@ -491,8 +508,10 @@
 				CODE_SIGN_IDENTITY = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = JXP2S296CC;
+				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -510,6 +529,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 0.1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -601,10 +621,13 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = JXP2S296CC;
+				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -616,9 +639,10 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 0.1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
-				OTHER_CODE_SIGN_FLAGS = "--timestamp=none";
+				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -676,6 +700,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		C7D250D83E9EF086D4E3C159 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.6.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		8F4DB2EE126B1E992946FF4D /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C7D250D83E9EF086D4E3C159 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = C39037E652B13BB45A2E9CE8 /* Project object */;
 }
