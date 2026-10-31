@@ -54,6 +54,7 @@ SIGNATURE=$(codesign -dv "$APP" 2>&1)
 [[ "$SIGNATURE" =~ flags=.*runtime ]] || fail "hardened runtime missing"
 ENTITLEMENTS=$(codesign -d --entitlements - "$APP" 2>/dev/null)
 [[ "$ENTITLEMENTS" != *get-task-allow* ]] || fail "get-task-allow entitlement present"
+! LC_ALL=C grep -rqF "$HOME" "$APP" || fail "the build contains local paths ($HOME)"
 
 echo "==> Notarizing (a few minutes)"
 ditto -c -k --keepParent "$APP" "$OUT/notarize.zip"
