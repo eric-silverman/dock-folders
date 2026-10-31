@@ -49,8 +49,11 @@ for item in Versions/B/XPCServices/Installer.xpc Versions/B/XPCServices/Download
 done
 codesign --force --options runtime --timestamp --preserve-metadata=entitlements -s "$IDENTITY" "$APP"
 codesign --verify --deep --strict "$APP"
-codesign -dv "$APP" 2>&1 | grep -q "flags=.*runtime" || fail "hardened runtime missing"
-! codesign -d --entitlements - "$APP" 2>/dev/null | grep -q get-task-allow || fail "get-task-allow entitlement present"
+# Capture before grepping: under pipefail, grep -q exiting early makes codesign die of SIGPIPE and the pipe "fail".
+SIGNATURE=$(codesign -dv "$APP" 2>&1)
+[[ "$SIGNATURE" =~ flags=.*runtime ]] || fail "hardened runtime missing"
+ENTITLEMENTS=$(codesign -d --entitlements - "$APP" 2>/dev/null)
+[[ "$ENTITLEMENTS" != *get-task-allow* ]] || fail "get-task-allow entitlement present"
 
 echo "==> Notarizing (a few minutes)"
 ditto -c -k --keepParent "$APP" "$OUT/notarize.zip"
