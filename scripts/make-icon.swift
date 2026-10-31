@@ -1,4 +1,4 @@
-// Renders the DockFolders app icon: a folder tile holding a 2×2 grid of apps, sitting on a Dock shelf.
+// Renders the DockFolders app icon: a folder tile holding a 2×2 grid of apps.
 //   swift scripts/make-icon.swift <out.png> [pixels]
 import AppKit
 
@@ -17,37 +17,21 @@ func shadow(_ blur: CGFloat, _ dy: CGFloat, _ alpha: CGFloat) {
     sh.shadowColor = .black.withAlphaComponent(alpha); sh.set()
 }
 
-// Background: the macOS icon grid's 824pt rounded square, deep indigo to blue.
+// The macOS icon grid's 824pt rounded square: a white folder tile holding a 2×2 grid of apps.
 let body = rect(100, 100, 824, 824)
 NSGraphicsContext.saveGraphicsState()
-shadow(28, 12, 0.35)
-rounded(body, 185).fill() // shadow carrier
+shadow(28, 12, 0.3)
+rgb(1, 1, 1).setFill()
+rounded(body, 185).fill() // casts the shadow; the gradient can't
 NSGraphicsContext.restoreGraphicsState()
-NSGradient(starting: rgb(0.36, 0.42, 0.98), ending: rgb(0.16, 0.13, 0.52))!.draw(in: rounded(body, 185), angle: -90)
+NSGradient(starting: rgb(1, 1, 1), ending: rgb(0.92, 0.93, 0.97))!.draw(in: rounded(body, 185), angle: -90)
 
-// Dock shelf along the bottom.
-rgb(1, 1, 1, 0.22).setFill()
-rounded(rect(168, 178, 688, 120), 44).fill()
-
-// Folder tile, raised above the shelf.
-let tile = rect(262, 300, 500, 500)
-NSGraphicsContext.saveGraphicsState()
-shadow(40, 18, 0.4)
-rgb(0.97, 0.97, 1).setFill()
-rounded(tile, 118).fill()
-NSGraphicsContext.restoreGraphicsState()
-
-// 2×2 apps inside the tile.
 let colors = [rgb(1.0, 0.62, 0.20), rgb(0.98, 0.33, 0.52), rgb(0.22, 0.78, 0.45), rgb(0.20, 0.62, 1.0)]
-let cell: CGFloat = 170, gap: CGFloat = 48, origin = (x: 262 + (500 - 2 * cell - gap) / 2, y: 300 + (500 - 2 * cell - gap) / 2)
+let cell: CGFloat = 280, gap: CGFloat = 80, inset = (824 - 2 * cell - gap) / 2
 for (i, c) in colors.enumerated() {
-    let r = rect(origin.x + CGFloat(i % 2) * (cell + gap), origin.y + CGFloat(1 - i / 2) * (cell + gap), cell, cell)
+    let r = rect(100 + inset + CGFloat(i % 2) * (cell + gap), 100 + inset + CGFloat(1 - i / 2) * (cell + gap), cell, cell)
     let top = c.blended(withFraction: 0.2, of: .white)!, bottom = c.blended(withFraction: 0.12, of: .black)!
-    NSGradient(starting: top, ending: bottom)!.draw(in: rounded(r, 42), angle: -90)
+    NSGradient(starting: top, ending: bottom)!.draw(in: rounded(r, 68), angle: -90)
 }
-
-// Running-indicator dot under the tile.
-rgb(1, 1, 1, 0.9).setFill()
-NSBezierPath(ovalIn: rect(498, 214, 28, 28)).fill()
 
 try! rep.representation(using: .png, properties: [:])!.write(to: URL(fileURLWithPath: out))
