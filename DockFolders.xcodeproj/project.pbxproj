@@ -27,6 +27,7 @@
 		7E7A4E520DCED837B4EE232D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 323B0BA0FEAFEB17B53088C7 /* AppDelegate.swift */; };
 		841F063F26C3A2ADF11221B0 /* ManagerRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ED8F639F3B0458DB3406249 /* ManagerRequest.swift */; };
 		8501F54CDB757B3A47D6C5D9 /* ManagerRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ED8F639F3B0458DB3406249 /* ManagerRequest.swift */; };
+		99B7674A36428B521702D410 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 60378059EB8381A304DB783C /* Assets.xcassets */; };
 		9F1975628B566B690CBE26DC /* Folder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB94605F45B0088ACEB76B7 /* Folder.swift */; };
 		B2D402578757955C37579B22 /* DockPrefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60664DEF0BCDB407B80AAF5B /* DockPrefs.swift */; };
 		B445781D6E57C08718107D8E /* PanelPlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4497350E6802CD13A670A2F /* PanelPlacement.swift */; };
@@ -93,6 +94,7 @@
 		472FAB6696738CE99297BD29 /* DockFoldersApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockFoldersApp.swift; sourceTree = "<group>"; };
 		4CFCC9FDD03A5ACFCB26B7D1 /* AppIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIcon.swift; sourceTree = "<group>"; };
 		4EA56D836B6E327072218DC6 /* FolderPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderPanel.swift; sourceTree = "<group>"; };
+		60378059EB8381A304DB783C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		60664DEF0BCDB407B80AAF5B /* DockPrefs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockPrefs.swift; sourceTree = "<group>"; };
 		6ED2620993BEC993383F4BF0 /* PanelPlacementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelPlacementTests.swift; sourceTree = "<group>"; };
 		7D72CDB26D8F1C83A5FFC662 /* DockMenuPlugIn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockMenuPlugIn.swift; sourceTree = "<group>"; };
@@ -172,6 +174,7 @@
 		B6E1BD7B47FA9B19A97389B5 /* DockFolders */ = {
 			isa = PBXGroup;
 			children = (
+				60378059EB8381A304DB783C /* Assets.xcassets */,
 				472FAB6696738CE99297BD29 /* DockFoldersApp.swift */,
 				60664DEF0BCDB407B80AAF5B /* DockPrefs.swift */,
 				0CE12F7AE6A2C011640DAF09 /* FolderModel.swift */,
@@ -219,6 +222,7 @@
 			buildConfigurationList = 9BAB8BA691BB5E340F29F552 /* Build configuration list for PBXNativeTarget "DockFolders" */;
 			buildPhases = (
 				00C898CC8180A267C381DF1A /* Sources */,
+				11093CED522480179602E88C /* Resources */,
 				0649D7828D28C57D748083FB /* Frameworks */,
 				F98ED1165B58C4613A2EB497 /* Embed Dependencies */,
 			);
@@ -320,6 +324,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		11093CED522480179602E88C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				99B7674A36428B521702D410 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		00C898CC8180A267C381DF1A /* Sources */ = {
